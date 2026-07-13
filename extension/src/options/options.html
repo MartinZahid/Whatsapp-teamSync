@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opciones - WhatsApp Team Sync</title>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Configuración</h1>
+      <p class="subtitle">Ajustes del servidor y conexión</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Servidor WebSocket</h2>
+        <div class="form-group">
+          <label for="server-url">URL del servidor</label>
+          <input type="text" id="server-url" placeholder="ws://localhost:3001" autocomplete="off">
+          <small class="hint">Debe ser ws:// o wss://</small>
+        </div>
+        <div class="form-actions">
+          <button id="test-connection" class="btn btn-secondary">Probar conexión</button>
+          <button id="save-server" class="btn btn-primary">Guardar</button>
+        </div>
+        <div id="connection-result" class="result hidden"></div>
+      </section>
+
+      <section class="card">
+        <h2>Información</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Versión</span>
+            <span class="info-value" id="version">1.0.0</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Estado del servidor</span>
+            <span class="info-value" id="server-status">Desconocido</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card danger-zone">
+        <h2>Zona de peligro</h2>
+        <p>Restablecer todos los ajustes a valores predeterminados.</p>
+        <button id="reset-all" class="btn btn-danger">Restablecer todo</button>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
