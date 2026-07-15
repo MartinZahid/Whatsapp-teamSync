@@ -418,6 +418,11 @@ class BackgroundManager {
     const agent = this.agents.get(agentName)
     if (!agent) {
       this.updateAgentState(agentName, { status: contact ? 'active' : 'available', contact })
+      if (contact) {
+        this.send({ type: 'ATTENDING', agent: agentName, contact, status: 'active' })
+      } else {
+        this.send({ type: 'AVAILABLE', agent: agentName })
+      }
       this.broadcastToContent({
         type: 'PRESENCE_UPDATE',
         agents: this.getAllAgents()

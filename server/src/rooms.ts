@@ -1,7 +1,7 @@
 // Server-side agent registry and presence management
 
 import { WebSocket } from 'ws'
-import { Agent, AgentStatus, WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, isDeleteAgentMessage, STATUS_COLORS, PresenceUpdate } from './types.js'
+import { Agent, AgentStatus, WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, isDeleteAgentMessage, isHeartbeatMessage, STATUS_COLORS, PresenceUpdate } from './types.js'
 
 interface ClientConnection {
   ws: import('ws').WebSocket
@@ -100,6 +100,8 @@ export class RoomManager {
       if (deletedAgent) {
         console.log(`[Server] Agent removed: ${deletedAgent.name}`)
       }
+    } else if (isHeartbeatMessage(message)) {
+      return // Heartbeat does not change state, no broadcast needed
     }
 
     this.broadcastPresence()
