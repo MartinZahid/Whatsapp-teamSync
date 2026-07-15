@@ -29,10 +29,9 @@ async function loadAgentList(): Promise<string[]> {
 function saveAgentList(list: string[]) { chrome.storage.local.set({ [AGENT_LIST_KEY]: list }) }
 
 // --- Views ---
-function showView(v: 'setup' | 'connected' | 'error') {
+function showView(v: 'setup' | 'connected') {
   $('setup-view').classList.toggle('hidden', v !== 'setup')
   $('connected-view').classList.toggle('hidden', v !== 'connected')
-  $('error-view').classList.toggle('hidden', v !== 'error')
 }
 
 function updateStatus(connected: boolean, connecting = false) {
@@ -144,6 +143,35 @@ async function init() {
 
 // --- Event listeners ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Listen for background messages (register before init to avoid race condition)
+  chrome.runtime.onMessage.addListener(msg => {
+    switch (msg.type) {
+      case 'CONNECTION_STATUS':
+        updateStatus(msg.connected)
+        setServerWarning(!msg.connected)
+        if (msg.connected) {
+          updateBadge(isPaused ? 'Pausado' : 'Disponible')
+          ;($('pause-btn') as HTMLButtonElement).disabled = false
+          ;($('resume-btn') as HTMLButtonElement).disabled = !isPaused
+        } else {
+          updateBadge('Desconectado')
+          ;($('pause-btn') as HTMLButtonElement).disabled = true
+          ;($('resume-btn') as HTMLButtonElement).disabled = true
+        }
+        break
+      case 'AGENT_STATUS':
+        updateBadge(msg.status)
+        break
+      case 'SERVER_DISCONNECTED':
+        setServerWarning(true)
+        updateStatus(false)
+        updateBadge('Desconectado')
+        ;($('pause-btn') as HTMLButtonElement).disabled = true
+        ;($('resume-btn') as HTMLButtonElement).disabled = true
+        break
+    }
+  })
+
   init()
 
   // Add agent button
@@ -212,40 +240,4 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.runtime.sendMessage({ type: 'RESUMED' })
   })
 
-  $('retry-btn').addEventListener('click', () => {
-    if (currentConfig?.agentName) {
-      showView('connected')
-      updateStatus(false, true)
-      chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: currentConfig.agentName })
-    }
-  })
-
-  // Listen for background messages
-  chrome.runtime.onMessage.addListener(msg => {
-    switch (msg.type) {
-      case 'CONNECTION_STATUS':
-        updateStatus(msg.connected)
-        setServerWarning(!msg.connected)
-        if (msg.connected) {
-          updateBadge(isPaused ? 'Pausado' : 'Disponible')
-          ;($('pause-btn') as HTMLButtonElement).disabled = false
-          ;($('resume-btn') as HTMLButtonElement).disabled = !isPaused
-        } else {
-          updateBadge('Desconectado')
-          ;($('pause-btn') as HTMLButtonElement).disabled = true
-          ;($('resume-btn') as HTMLButtonElement).disabled = true
-        }
-        break
-      case 'AGENT_STATUS':
-        updateBadge(msg.status)
-        break
-      case 'SERVER_DISCONNECTED':
-        setServerWarning(true)
-        updateStatus(false)
-        updateBadge('Desconectado')
-        ;($('pause-btn') as HTMLButtonElement).disabled = true
-        ;($('resume-btn') as HTMLButtonElement).disabled = true
-        break
-    }
-  })
 })

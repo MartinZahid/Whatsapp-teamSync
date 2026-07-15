@@ -475,6 +475,8 @@ class BackgroundManager {
         }
       }
     })
+    // También notificar al popup si está abierto
+    chrome.runtime.sendMessage(message).catch(() => {})
   }
 
   private sendCurrentStateToTab(tabId?: number): void {
