@@ -1,9 +1,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary: #25D366;
-  --primary-hover: #1EB35A;
-  --primary-light: #DCFCE7;
+  --primary: #F97316;
+  --primary-hover: #EA580C;
+  --primary-light: #FED7AA;
+  --warning: #F59E0B;
   --danger: #EF4444;
   --danger-hover: #DC2626;
   --text: #1F2937;
@@ -50,7 +51,7 @@ h2 svg { width: 18px; height: 18px; }
 .agent-item.selected {
   background: var(--primary-light); border-color: var(--primary);
 }
-.agent-item.selected .agent-name { font-weight: 600; color: #166534; }
+.agent-item.selected .agent-name { font-weight: 600; color: #9A3412; }
 
 .agent-avatar {
   width: 28px; height: 28px; border-radius: 50%;
@@ -98,11 +99,11 @@ h2 svg { width: 18px; height: 18px; }
 .btn-pause { flex: 1; background: var(--bg-hover); color: var(--warning); border: 1px solid var(--border); }
 .btn-pause:hover:not(:disabled) { background: #FEF3C7; }
 
-.btn-resume { flex: 1; background: var(--primary-light); color: #166534; border: 1px solid var(--primary); }
-.btn-resume:hover:not(:disabled) { background: #BBF7D0; }
+.btn-resume { flex: 1; background: var(--primary-light); color: #9A3412; border: 1px solid var(--primary); }
+.btn-resume:hover:not(:disabled) { background: #FFEDD5; }
 
 .btn-change {
-  width: 100%; background: transparent; color: var(--text-muted);
+  background: transparent; color: var(--text-muted);
   font-size: 12px; border: 1px solid var(--border);
 }
 .btn-change:hover { background: var(--bg-hover); }
@@ -123,7 +124,7 @@ h2 svg { width: 18px; height: 18px; }
 .custom-name-row input:focus { border-color: var(--primary); }
 .custom-name-row .btn { white-space: nowrap; }
 
-.connected-header {
+.current-agent-bar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 12px; background: var(--bg-hover); border-radius: var(--radius);
 }
@@ -142,7 +143,7 @@ h2 svg { width: 18px; height: 18px; }
   display: inline-block; padding: 3px 8px; border-radius: 999px;
   font-size: 11px; font-weight: 500; white-space: nowrap;
 }
-.badge-available { background: #DCFCE7; color: #166534; }
+.badge-available { background: #FED7AA; color: #9A3412; }
 .badge-paused { background: #FEF3C7; color: #92400E; }
 .badge-attending { background: #FEE2E2; color: #991B1B; }
 .badge-offline { background: #F3F4F6; color: var(--text-muted); }

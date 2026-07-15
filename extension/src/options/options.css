@@ -5,9 +5,9 @@
 }
 
 :root {
-  --primary: #25D366;
-  --primary-hover: #1EB35A;
-  --primary-light: #E8F5E9;
+  --primary: #F97316;
+  --primary-hover: #EA580C;
+  --primary-light: #FED7AA;
   --secondary: #64748B;
   --secondary-hover: #475569;
   --danger: #EF4444;
@@ -176,7 +176,7 @@ header h1 {
 }
 
 .result.success {
-  background: #DCFCE7;
+  background: #FED7AA;
   color: #166534;
   border: 1px solid #86EFAC;
 }

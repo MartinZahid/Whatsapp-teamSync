@@ -58,7 +58,7 @@ function renderAgentList() {
   const list = $('agent-list')
   list.innerHTML = agentList.map(name => {
     const initial = name.charAt(0).toUpperCase()
-    const colors = ['#25D366','#EF4444','#F59E0B','#3B82F6','#8B5CF6','#EC4899']
+    const colors = ['#F97316','#EF4444','#F59E0B','#3B82F6','#8B5CF6','#EC4899']
     const color = colors[agentList.indexOf(name) % colors.length]
     return `
 <div class="agent-item" data-agent="${name}">
@@ -97,6 +97,8 @@ function selectAgent(name: string) {
   showView('connected')
   updateStatus(false, true)
   updateBadge('Conectando...')
+  $('current-agent-bar').classList.remove('hidden')
+  $('action-buttons').classList.remove('hidden')
   chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: name })
 }
 
@@ -119,6 +121,8 @@ async function init() {
 
   if (currentConfig?.agentName) {
     $('display-name').textContent = currentConfig.agentName
+    $('current-agent-bar').classList.remove('hidden')
+    $('action-buttons').classList.remove('hidden')
     showView('connected')
     updateStatus(false)
     updateBadge('Desconectado')

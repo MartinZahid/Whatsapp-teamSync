@@ -17,6 +17,9 @@ export class FloatingPanel {
   private isCollapsed = false
   private currentAgentName: string | null = null
   private serverConnected = false
+  private pauseBtn: HTMLButtonElement | null = null
+  private resumeBtn: HTMLButtonElement | null = null
+  private isPaused = false
 
   constructor() {
     this.init()
@@ -53,8 +56,8 @@ export class FloatingPanel {
       * { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        --wts-primary: #25D366;
-        --wts-primary-hover: #1EB35A;
+        --wts-primary: #F97316;
+        --wts-primary-hover: #EA580C;
         --wts-bg: #ffffff;
         --wts-text: #1F2937;
         --wts-text-muted: #6B7280;
@@ -99,7 +102,7 @@ export class FloatingPanel {
         align-items: center;
         justify-content: space-between;
         padding: 12px 16px;
-        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
         color: white;
       }
 
@@ -121,7 +124,7 @@ export class FloatingPanel {
         justify-content: center;
         font-size: 12px;
         font-weight: bold;
-        color: #25D366;
+        color: #F97316;
       }
 
       .wts-toggle {
@@ -218,7 +221,7 @@ export class FloatingPanel {
       .wts-agent.current-user .wts-agent-name::after {
         content: ' (tú)';
         font-weight: 400;
-        color: #25D366;
+        color: #F97316;
         font-size: 12px;
       }
 
@@ -262,6 +265,38 @@ export class FloatingPanel {
         font-size: 13px;
       }
 
+      .wts-actions {
+        padding: 8px 12px;
+        display: flex;
+        gap: 6px;
+        border-top: 1px solid var(--wts-border);
+      }
+      .wts-pause-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 12px;
+        border: 1px solid var(--wts-border);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--wts-paused);
+        font-size: 12px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .wts-pause-btn:hover { background: #FEF3C7; }
+      .wts-pause-btn svg { width: 14px; height: 14px; }
+      .wts-resume-btn {
+        color: #9A3412;
+        border-color: var(--wts-primary);
+        background: #FED7AA;
+      }
+      .wts-resume-btn:hover { background: #FDBA74; }
+
       .wts-server-status {
         padding: 8px 16px;
         background: #FEF2F2;
@@ -295,7 +330,7 @@ export class FloatingPanel {
         top: 20px;
         right: 20px;
         z-index: 2147483647;
-        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
         color: white;
         padding: 10px 14px;
         border-radius: 50px;
@@ -319,6 +354,8 @@ export class FloatingPanel {
         from { opacity: 0; transform: scale(0.8); }
         to { opacity: 1; transform: scale(1); }
       }
+
+      .hidden { display: none !important; }
 
       @media (prefers-reduced-motion: reduce) {
         .wts-panel, .wts-panel.collapsed, .wts-collapsed-badge { animation: none !important; }
@@ -354,6 +391,21 @@ export class FloatingPanel {
         <div class="wts-agents" id="wts-agents">
           <div class="wts-empty">Cargando agentes...</div>
         </div>
+        <div class="wts-actions" id="wts-actions">
+          <button class="wts-pause-btn" id="wts-pause-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
+            </svg>
+            Pausar
+          </button>
+          <button class="wts-pause-btn wts-resume-btn hidden" id="wts-resume-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Disponible
+          </button>
+        </div>
         <div class="wts-server-status" id="wts-server-status">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
@@ -375,11 +427,27 @@ export class FloatingPanel {
     this.agentsList = this.shadowRoot.getElementById('wts-agents') as HTMLElement
     this.toggleBtn = this.shadowRoot.getElementById('wts-toggle') as HTMLButtonElement
     this.collapsedBadge = this.shadowRoot.getElementById('wts-collapsed-badge') as HTMLElement
+    this.pauseBtn = this.shadowRoot.getElementById('wts-pause-btn') as HTMLButtonElement
+    this.resumeBtn = this.shadowRoot.getElementById('wts-resume-btn') as HTMLButtonElement
   }
 
   private bindEvents(): void {
     this.toggleBtn?.addEventListener('click', () => this.toggleCollapse())
     this.collapsedBadge?.addEventListener('click', () => this.toggleCollapse())
+
+    this.pauseBtn?.addEventListener('click', () => {
+      this.isPaused = true
+      this.pauseBtn?.classList.add('hidden')
+      this.resumeBtn?.classList.remove('hidden')
+      chrome.runtime.sendMessage({ type: 'PAUSED' })
+    })
+
+    this.resumeBtn?.addEventListener('click', () => {
+      this.isPaused = false
+      this.resumeBtn?.classList.add('hidden')
+      this.pauseBtn?.classList.remove('hidden')
+      chrome.runtime.sendMessage({ type: 'RESUMED' })
+    })
 
     // Keyboard support
     this.panel?.addEventListener('keydown', (e) => {
@@ -530,6 +598,17 @@ export class FloatingPanel {
 
   updateCurrentUserName(name: string): void {
     this.currentAgentName = name
+  }
+
+  setPaused(paused: boolean): void {
+    this.isPaused = paused
+    if (paused) {
+      this.pauseBtn?.classList.add('hidden')
+      this.resumeBtn?.classList.remove('hidden')
+    } else {
+      this.resumeBtn?.classList.add('hidden')
+      this.pauseBtn?.classList.remove('hidden')
+    }
   }
 
   updateServerStatus(connected: boolean): void {

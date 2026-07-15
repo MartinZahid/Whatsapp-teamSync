@@ -1,8 +1,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --wts-primary: #25D366;
-  --wts-primary-hover: #1EB35A;
+  --wts-primary: #F97316;
+  --wts-primary-hover: #EA580C;
   --wts-bg: #ffffff;
   --wts-text: #1F2937;
   --wts-text-muted: #6B7280;
@@ -47,7 +47,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
   color: white;
 }
 
@@ -69,7 +69,7 @@
   justify-content: center;
   font-size: 12px;
   font-weight: bold;
-  color: #25D366;
+  color: #F97316;
 }
 
 .wts-toggle {
@@ -166,7 +166,7 @@
 .wts-agent.current-user .wts-agent-name::after {
   content: ' (tú)';
   font-weight: 400;
-  color: #25D366;
+  color: #F97316;
   font-size: 12px;
 }
 
@@ -210,6 +210,38 @@
   font-size: 13px;
 }
 
+.wts-actions {
+  padding: 8px 12px;
+  display: flex;
+  gap: 6px;
+  border-top: 1px solid var(--wts-border);
+}
+.wts-pause-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--wts-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--wts-paused);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wts-pause-btn:hover { background: #FEF3C7; }
+.wts-pause-btn svg { width: 14px; height: 14px; }
+.wts-resume-btn {
+  color: #9A3412;
+  border-color: var(--wts-primary);
+  background: #FED7AA;
+}
+.wts-resume-btn:hover { background: #FDBA74; }
+
 .wts-server-status {
   padding: 8px 16px;
   background: #FEF2F2;
@@ -243,7 +275,7 @@
   top: 20px;
   right: 20px;
   z-index: 2147483647;
-  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
   color: white;
   padding: 10px 14px;
   border-radius: 50px;
@@ -267,6 +299,8 @@
   from { opacity: 0; transform: scale(0.8); }
   to { opacity: 1; transform: scale(1); }
 }
+
+.hidden { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .wts-panel, .wts-panel.collapsed, .wts-collapsed-badge { animation: none !important; }

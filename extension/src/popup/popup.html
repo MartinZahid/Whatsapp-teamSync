@@ -15,6 +15,17 @@
       WhatsApp Team Sync
     </h2>
 
+    <div id="current-agent-bar" class="current-agent-bar hidden">
+      <div class="status-row">
+        <span class="status-dot" id="status-dot"></span>
+        <div>
+          <div id="display-name" class="current-name"></div>
+          <span id="status-text" class="status-label">Conectando...</span>
+        </div>
+      </div>
+      <span class="badge" id="status-badge">-</span>
+    </div>
+
     <div id="setup-view">
       <p class="section-title">Selecciona tu agente</p>
 
@@ -46,36 +57,24 @@
       </div>
     </div>
 
-    <div id="connected-view" class="hidden">
-      <div class="connected-header">
-        <div class="status-row">
-          <span class="status-dot" id="status-dot"></span>
-          <div>
-            <div id="display-name" class="current-name"></div>
-            <span id="status-text" class="status-label">Conectando...</span>
-          </div>
-        </div>
-        <span class="badge" id="status-badge">-</span>
-      </div>
-
-      <div class="action-buttons">
-        <button id="pause-btn" class="btn btn-pause" disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="4" width="4" height="16"/>
-            <rect x="14" y="4" width="4" height="16"/>
-          </svg>
-          Pausar
-        </button>
-        <button id="resume-btn" class="btn btn-resume" disabled hidden>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-          Disponible
-        </button>
-      </div>
-
+    <div class="action-buttons" id="action-buttons">
+      <button id="pause-btn" class="btn btn-pause" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+        Pausar
+      </button>
+      <button id="resume-btn" class="btn btn-resume" disabled hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Disponible
+      </button>
       <button id="change-agent-btn" class="btn btn-change">Cambiar de agente</button>
+    </div>
 
+    <div id="connected-view" class="hidden">
       <div id="server-status" class="server-status hidden">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>

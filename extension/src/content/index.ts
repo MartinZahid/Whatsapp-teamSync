@@ -111,6 +111,7 @@ class WhatsAppTeamSync {
       case 'AGENT_STATUS':
         this.isPaused = message.status === 'paused'
         this.floatingPanel.updateCurrentUserStatus(message.status)
+        this.floatingPanel.setPaused(this.isPaused)
         break
       case 'CURRENT_AGENT_NAME':
         this.currentAgentName = message.name
