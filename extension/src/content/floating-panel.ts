@@ -22,6 +22,8 @@ export class FloatingPanel {
   private resumeBtn: HTMLButtonElement | null = null
   private isPaused = false
   private timerInterval: number | null = null
+  private localChatTimes: Map<string, number> = new Map()
+  private chatContacts: Map<string, string | null> = new Map()
 
   constructor() {
     this.init()
@@ -218,6 +220,20 @@ export class FloatingPanel {
       return
     }
 
+    // Track chat start times locally (reliable even if server drops chatStartTime)
+    for (const agent of agents) {
+      const prevContact = this.chatContacts.get(agent.name)
+      if (agent.status === 'active' && agent.contact) {
+        if (!this.localChatTimes.has(agent.name) || prevContact !== agent.contact) {
+          this.localChatTimes.set(agent.name, Date.now())
+        }
+        this.chatContacts.set(agent.name, agent.contact)
+      } else if (agent.status !== 'active') {
+        this.localChatTimes.delete(agent.name)
+        this.chatContacts.delete(agent.name)
+      }
+    }
+
     this.agentsList.innerHTML = agents.map((agent) => {
       const isCurrentUser = agent.name === currentAgentName
       const statusClass = getStatusClass(agent.status)
@@ -227,8 +243,9 @@ export class FloatingPanel {
           ? `<span class="wts-agent-contact available">Disponible</span>`
           : ''
 
-      const timerHtml = agent.status === 'active' && agent.contact && agent.chatStartTime
-        ? `<span class="wts-agent-timer" data-start="${agent.chatStartTime}">${this.formatElapsed(agent.chatStartTime)}</span>`
+      const chatStartTime = this.localChatTimes.get(agent.name)
+      const timerHtml = agent.status === 'active' && agent.contact && chatStartTime
+        ? `<span class="wts-agent-timer" data-start="${chatStartTime}">${this.formatElapsed(chatStartTime)}</span>`
         : ''
 
       return `
