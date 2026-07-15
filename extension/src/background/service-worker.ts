@@ -233,16 +233,17 @@ class BackgroundManager {
       }
 
       let chatStartTime = existing.chatStartTime
-      if (agent.status === 'active' && agent.contact && !chatStartTime) {
+      const contact = agent.contact || existing.contact || null
+      if (agent.status === 'active' && contact && !chatStartTime) {
         chatStartTime = now
-      } else if (agent.status !== 'active' || !agent.contact) {
+      } else if (agent.status !== 'active') {
         chatStartTime = undefined
       }
 
       this.agents.set(agent.name, {
         ...existing,
         status: agent.status,
-        contact: agent.contact,
+        contact,
         color: agent.color,
         chatStartTime,
         lastSeen: agent.lastSeen
