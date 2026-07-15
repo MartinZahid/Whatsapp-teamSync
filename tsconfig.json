@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["extension/src/*"],
+      "@shared/*": ["shared/*"]
+    },
+    "types": ["chrome"]
+  },
+  "include": ["extension/src/**/*", "shared/**/*"],
+  "exclude": ["node_modules", "dist", "server"]
+}

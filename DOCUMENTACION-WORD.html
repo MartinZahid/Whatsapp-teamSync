@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>WhatsApp Team Sync — Documentación Técnica</title>
+  <style>
+    /* ===== ESTILOS PROFESIONALES PARA WORD ===== */
+    @page { margin: 2.5cm 2cm; }
+    
+    body {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1F2937;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* ===== PORTADA ===== */
+    .cover-page {
+      text-align: center;
+      page-break-after: always;
+      padding-top: 120px;
+    }
+    .cover-page .logo {
+      font-size: 72pt;
+      color: #25D366;
+      margin-bottom: 10px;
+    }
+    .cover-page h1 {
+      font-size: 32pt;
+      color: #1F2937;
+      margin: 20px 0 10px;
+      font-weight: 700;
+    }
+    .cover-page .subtitle {
+      font-size: 16pt;
+      color: #6B7280;
+      margin-bottom: 40px;
+    }
+    .cover-page .meta {
+      font-size: 11pt;
+      color: #9CA3AF;
+      margin-top: 60px;
+      line-height: 2;
+    }
+    .cover-page .line {
+      width: 200px;
+      height: 4px;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      margin: 30px auto;
+      border-radius: 2px;
+    }
+
+    /* ===== TOC ===== */
+    .toc {
+      page-break-after: always;
+    }
+    .toc h2 {
+      font-size: 20pt;
+      color: #128C7E;
+      border-bottom: 2px solid #25D366;
+      padding-bottom: 8px;
+    }
+    .toc ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    .toc ul li {
+      padding: 6px 0;
+      font-size: 12pt;
+      border-bottom: 1px dotted #E5E7EB;
+    }
+    .toc ul li a {
+      color: #1F2937;
+      text-decoration: none;
+    }
+    .toc ul li a:hover { color: #25D366; }
+    .toc .toc-h1 { font-weight: 600; font-size: 13pt; padding-top: 12px !important; }
+    .toc .toc-h2 { padding-left: 24px; font-size: 11pt; }
+    .toc .toc-h3 { padding-left: 48px; font-size: 10pt; color: #6B7280; }
+
+    /* ===== HEADINGS ===== */
+    h1 {
+      font-size: 22pt;
+      color: #128C7E;
+      border-bottom: 3px solid #25D366;
+      padding-bottom: 10px;
+      margin-top: 40px;
+      page-break-before: always;
+    }
+    h1:first-of-type { page-break-before: avoid; }
+    h2 {
+      font-size: 16pt;
+      color: #1F2937;
+      margin-top: 30px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    h3 {
+      font-size: 13pt;
+      color: #374151;
+      margin-top: 24px;
+    }
+    h4 {
+      font-size: 11pt;
+      color: #4B5563;
+      margin-top: 18px;
+    }
+
+    /* ===== DIAGRAMAS ===== */
+    .diagram {
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 20px 16px;
+      margin: 20px 0;
+      font-family: 'Courier New', 'Consolas', monospace;
+      font-size: 9pt;
+      line-height: 1.4;
+      white-space: pre;
+      overflow-x: auto;
+      color: #374151;
+    }
+    .diagram-title {
+      font-family: 'Calibri', sans-serif;
+      font-size: 10pt;
+      font-weight: 600;
+      color: #6B7280;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    /* ===== TABLES ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 10pt;
+    }
+    th {
+      background: #128C7E;
+      color: white;
+      font-weight: 600;
+      padding: 10px 12px;
+      text-align: left;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    tr:nth-child(even) td { background: #F9FAFB; }
+    tr:hover td { background: #ECFDF5; }
+
+    /* ===== CODE ===== */
+    code {
+      background: #F3F4F6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 9.5pt;
+      color: #DC2626;
+    }
+    pre {
+      background: #1F2937;
+      color: #F3F4F6;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 9pt;
+      line-height: 1.6;
+    }
+
+    /* ===== CALLOUTS ===== */
+    .callout {
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 16px 0;
+      border-left: 4px solid;
+    }
+    .callout-info {
+      background: #EFF6FF;
+      border-color: #3B82F6;
+    }
+    .callout-success {
+      background: #ECFDF5;
+      border-color: #22C55E;
+    }
+    .callout-warning {
+      background: #FFFBEB;
+      border-color: #F59E0B;
+    }
+    .callout-error {
+      background: #FEF2F2;
+      border-color: #EF4444;
+    }
+    .callout strong { display: block; font-size: 10pt; margin-bottom: 4px; }
+
+    /* ===== FLOW BOXES ===== */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
+    .flow-box {
+      background: #128C7E;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 10pt;
+      font-weight: 500;
+      text-align: center;
+      min-width: 80px;
+    }
+    .flow-box.green { background: #22C55E; }
+    .flow-box.red { background: #EF4444; }
+    .flow-box.yellow { background: #F59E0B; }
+    .flow-box.gray { background: #9CA3AF; }
+    .flow-box.light { background: #F3F4F6; color: #1F2937; border: 1px solid #D1D5DB; }
+    .flow-arrow {
+      font-size: 16pt;
+      color: #9CA3AF;
+    }
+
+    /* ===== STATUS DOTS ===== */
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .dot-green { background: #22C55E; }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-gray { background: #9CA3AF; }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 2px solid #E5E7EB;
+      text-align: center;
+      font-size: 9pt;
+      color: #9CA3AF;
+    }
+
+    /* Page breaks */
+    .pb { page-break-before: always; }
+
+    /* Badge colors for tables */
+    .badge-green { background: #DCFCE7; color: #166534; padding: 2px 10px; border-radius: 12px; font-size: 9pt; font-weight: 500; }
+    .badge-red { background: #FEE2E2; color: #991B1B; padding: 2px 10px; border-radius: 12px; font-size: 9pt; font-weight: 500; }
+    .badge-yellow { background: #FEF3C7; color: #92400E; padding: 2px 10px; border-radius: 12px; font-size: 9pt; font-weight: 500; }
+    .badge-gray { background: #F3F4F6; color: #6B7280; padding: 2px 10px; border-radius: 12px; font-size: 9pt; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- PORTADA -->
+<!-- ============================================================ -->
+<div class="cover-page">
+  <div class="logo">💬</div>
+  <h1>WhatsApp Team Sync</h1>
+  <div class="subtitle">Documentación Técnica del Sistema</div>
+  <div class="line"></div>
+  <div class="meta">
+    <strong>Versión:</strong> 1.0.0<br>
+    <strong>Fecha:</strong> Julio 2026<br>
+    <strong>Tipo:</strong> Extensión Chrome + Servidor WebSocket<br>
+    <strong>Propósito:</strong> Presencia colaborativa en tiempo real para equipos de soporte en WhatsApp Web
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ÍNDICE -->
+<!-- ============================================================ -->
+<div class="toc">
+  <h2>Índice</h2>
+  <ul>
+    <li class="toc-h1"><a href="#s1">1. Visión General del Sistema</a></li>
+    <li class="toc-h2"><a href="#s1.1">1.1 ¿Qué problema resuelve?</a></li>
+    <li class="toc-h2"><a href="#s1.2">1.2 Arquitectura General</a></li>
+    <li class="toc-h2"><a href="#s1.3">1.3 Stack Tecnológico</a></li>
+    
+    <li class="toc-h1"><a href="#s2">2. Estructura del Proyecto</a></li>
+    <li class="toc-h2"><a href="#s2.1">2.1 Árbol de directorios</a></li>
+    <li class="toc-h2"><a href="#s2.2">2.2 Mapa de dependencias entre archivos</a></li>
+    
+    <li class="toc-h1"><a href="#s3">3. Servidor WebSocket</a></li>
+    <li class="toc-h2"><a href="#s3.1">3.1 server.ts — Punto de entrada</a></li>
+    <li class="toc-h2"><a href="#s3.2">3.2 rooms.ts — RoomManager</a></li>
+    <li class="toc-h2"><a href="#s3.3">3.3 types.ts — Tipos del servidor</a></li>
+    
+    <li class="toc-h1"><a href="#s4">4. Extensión de Chrome</a></li>
+    <li class="toc-h2"><a href="#s4.1">4.1 Manifest V3 — Configuración</a></li>
+    <li class="toc-h2"><a href="#s4.2">4.2 Service Worker (background)</a></li>
+    <li class="toc-h2"><a href="#s4.3">4.3 Content Script</a></li>
+    <li class="toc-h3"><a href="#s4.3.1">4.3.1 WhatsAppTeamSync (index.ts)</a></li>
+    <li class="toc-h3"><a href="#s4.3.2">4.3.2 FloatingPanel</a></li>
+    <li class="toc-h3"><a href="#s4.3.3">4.3.3 DomObserver</a></li>
+    <li class="toc-h3"><a href="#s4.3.4">4.3.4 ContactDetector</a></li>
+    <li class="toc-h2"><a href="#s4.4">4.4 Popup</a></li>
+    <li class="toc-h2"><a href="#s4.5">4.5 Options (Configuración)</a></li>
+    
+    <li class="toc-h1"><a href="#s5">5. Protocolo de Comunicación</a></li>
+    <li class="toc-h2"><a href="#s5.1">5.1 Mensajes Cliente → Servidor</a></li>
+    <li class="toc-h2"><a href="#s5.2">5.2 Mensajes Servidor → Cliente</a></li>
+    
+    <li class="toc-h1"><a href="#s6">6. Diagramas de Flujo</a></li>
+    <li class="toc-h2"><a href="#s6.1">6.1 Ciclo de conexión de un agente</a></li>
+    <li class="toc-h2"><a href="#s6.2">6.2 Detección de cambio de chat</a></li>
+    <li class="toc-h2"><a href="#s6.3">6.3 Reconexión automática</a></li>
+    <li class="toc-h2"><a href="#s6.4">6.4 Broadcast de presencia</a></li>
+    
+    <li class="toc-h1"><a href="#s7">7. Estados y Colores</a></li>
+    
+    <li class="toc-h1"><a href="#s8">8. Issues Técnicos Detectados</a></li>
+    <li class="toc-h1"><a href="#s9">9. Guía de Instalación</a></li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. VISIÓN GENERAL -->
+<!-- ============================================================ -->
+<h1 id="s1">1. Visión General del Sistema</h1>
+
+<h2 id="s1.1">1.1 ¿Qué problema resuelve?</h2>
+
+<p>En equipos de servicio al cliente que usan WhatsApp Web, varios agentes atienden chats simultáneamente. Sin un sistema de coordinación, es común que:</p>
+
+<ul>
+  <li>✅ Dos agentes atiendan al <strong>mismo cliente</strong> sin saberlo</li>
+  <li>❌ Un cliente quede <strong>sin atender</strong> porque nadie sabe quién está libre</li>
+  <li>❌ No haya visibilidad de <strong>quién está trabajando</strong> y quién está en pausa</li>
+</ul>
+
+<p><strong>WhatsApp Team Sync</strong> resuelve esto mostrando un <strong>panel flotante</strong> sobre WhatsApp Web con el estado en tiempo real de cada agente del equipo.</p>
+
+<div class="callout callout-success">
+  <strong>✅ Valor Principal</strong>
+  Coordinación visual en tiempo real para equipos de soporte sin necesidad de herramientas externas.
+</div>
+
+<h2 id="s1.2">1.2 Arquitectura General</h2>
+
+<p>El sistema sigue una arquitectura <strong>Cliente-Servidor con WebSocket</strong> en tiempo real:</p>
+
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    ARQUITECTURA DEL SISTEMA                              │
+│                                                                         │
+│  ┌─────────────────────────────────────┐   ┌─────────────────────────┐  │
+│  │        EXTENSIÓN CHROME             │   │                         │  │
+│  │  ┌───────────────────────────────┐  │   │    SERVIDOR NODE.JS     │  │
+│  │  │       POPUP (popup.ts)        │  │   │                         │  │
+│  │  │  • Seleccionar agente         │──┼──►│  ┌─────────────────┐   │  │
+│  │  │  • Pausar/Reanudar            │  │   │  │  WebSocketServer │   │  │
+│  │  │  • Añadir/Eliminar agentes    │  │   │  │  (ws://3001)     │   │  │
+│  │  └──────────────┬────────────────┘  │   │  └────────┬────────┘   │  │
+│  │                 │                    │   │           │              │  │
+│  │  ┌──────────────▼────────────────┐  │   │  ┌────────▼────────┐   │  │
+│  │  │    SERVICE WORKER             │  │   │  │   RoomManager   │   │  │
+│  │  │  (background/service-worker) │──┼──►│  │  • register()   │   │  │
+│  │  │  • WebSocket Client          │  │   │  │  • handleMsg()  │   │  │
+│  │  │  • Heartbeat (30s)           │  │   │  │  • broadcast()  │   │  │
+│  │  │  • Reconexión automática     │  │   │  │  • checkHBeat() │   │  │
+│  │  │  • Gestión de estado local   │  │   │  └─────────────────┘   │  │
+│  │  └──────────────┬────────────────┘  │   └─────────────────────────┘  │
+│  │                 │                    │                               │
+│  │  ┌──────────────▼────────────────┐  │                               │
+│  │  │    CONTENT SCRIPT             │  │                               │
+│  │  │  ┌────────────────────────┐   │  │                               │
+│  │  │  │   WhatsAppTeamSync     │   │  │                               │
+│  │  │  │  ┌──────────────────┐  │   │  │                               │
+│  │  │  │  │ FloatingPanel    │  │   │  │                               │
+│  │  │  │  │ (Shadow DOM)     │  │   │  │                               │
+│  │  │  │  └──────────────────┘  │   │  │                               │
+│  │  │  │  ┌──────────────────┐  │   │  │                               │
+│  │  │  │  │ DomObserver      │  │   │  │                               │
+│  │  │  │  └──────────────────┘  │   │  │                               │
+│  │  │  │  ┌──────────────────┐  │   │  │                               │
+│  │  │  │  │ ContactDetector  │  │   │  │                               │
+│  │  │  │  └──────────────────┘  │   │  │                               │
+│  │  │  └────────────────────────┘   │  │                               │
+│  │  └───────────────────────────────┘  │                               │
+│  └─────────────────────────────────────┘                               │
+│                                                                         │
+│  Leyenda: ──► chrome.runtime.sendMessage()                              │
+│           ──► WebSocket (TCP persistente)                              │
+└─────────────────────────────────────────────────────────────────────────┘
+</div>
+
+<h2 id="s1.3">1.3 Stack Tecnológico</h2>
+
+<table>
+  <tr><th>Capa</th><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr>
+  <tr><td>Runtime</td><td>Node.js</td><td>18+</td><td>Ejecución del servidor</td></tr>
+  <tr><td>Lenguaje</td><td>TypeScript</td><td>5.3</td><td>Tipado estático para toda la app</td></tr>
+  <tr><td>Bundler</td><td>Vite</td><td>5.x</td><td>Empaquetado de la extensión Chrome</td></tr>
+  <tr><td>WebSocket (servidor)</td><td>ws</td><td>8.16</td><td>Comunicación bidireccional en tiempo real</td></tr>
+  <tr><td>Extensión</td><td>Chrome Manifest V3</td><td>—</td><td>API moderna de extensiones Chrome</td></tr>
+  <tr><td>UI Extensión</td><td>HTML + CSS + Shadow DOM</td><td>—</td><td>Interfaz aislada del DOM de WhatsApp</td></tr>
+  <tr><td>Almacenamiento</td><td>chrome.storage (local + sync)</td><td>—</td><td>Persistencia de configuración</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<!-- 2. ESTRUCTURA DEL PROYECTO -->
+<!-- ============================================================ -->
+<h1 id="s2">2. Estructura del Proyecto</h1>
+
+<h2 id="s2.1">2.1 Árbol de directorios</h2>
+
+<div class="diagram">
+whatsapp-team-sync/
+│
+├── package.json                  ← Dependencias y scripts
+├── tsconfig.json                 ← TS config de la extensión
+├── vite.config.ts                ← Configuración de Vite (build)
+├── README.md                     ← Documentación básica
+│
+├── shared/                       ← Tipos compartidos
+│   ├── types.ts                  ← Interfaces y type guards
+│   └── types.js                  ← Versión compilada JS
+│
+├── server/                       ← Servidor WebSocket
+│   ├── tsconfig.json             ← TS config del servidor (NodeNext)
+│   └── src/
+│       ├── server.ts             ← Entry point, WebSocketServer
+│       ├── rooms.ts              ← RoomManager (lógica de presencia)
+│       └── types.ts              ← Tipos (copia de shared/)
+│
+├── extension/                    ← Extensión Chrome
+│   ├── public/
+│   │   ├── manifest.json         ← Manifest V3
+│   │   └── icons/                ← Íconos SVG (16, 48, 128)
+│   └── src/
+│       ├── background/
+│       │   ├── index.html        ← HTML del service worker
+│       │   └── service-worker.ts ← BackgroundManager
+│       ├── content/
+│       │   ├── index.html        ← HTML del content script
+│       │   ├── index.ts          ← WhatsAppTeamSync (entry point)
+│       │   ├── floating-panel.ts ← FloatingPanel (Shadow DOM UI)
+│       │   ├── dom-observer.ts   ← DomObserver (MutationObserver)
+│       │   ├── contact-detector.ts ← ContactDetector
+│       │   └── styles.css        ← Estilos inyectados
+│       ├── popup/
+│       │   ├── popup.html        ← HTML del popup
+│       │   ├── popup.ts          ← Lógica del popup
+│       │   └── popup.css         ← Estilos del popup
+│       └── options/
+│           ├── options.html      ← HTML de opciones
+│           ├── options.ts        ← Lógica de opciones
+│           └── options.css       ← Estilos de opciones
+│
+└── dist/                         ← Build de salida (generado)
+</div>
+
+<h2 id="s2.2">2.2 Mapa de dependencias entre archivos</h2>
+
+<div class="diagram">
+                    ┌────────────────────────────────────────────┐
+                    │           DEPENDENCIAS ENTRE ARCHIVOS      │
+                    └────────────────────────────────────────────┘
+
+    shared/types.ts ◄──────────── server/src/types.ts (copia)
+          │
+          │ (importado por)
+          ▼
+    server/src/rooms.ts
+          │
+          ▼
+    server/src/server.ts
+
+
+    extension/src/content/floating-panel.ts
+          │
+          ├──► (importa) ── shared/types.ts (vía alias @shared)
+          │
+          ▼
+    extension/src/content/index.ts
+          │
+          ├──► (importa) ── floating-panel.ts
+          ├──► (importa) ── dom-observer.ts
+          ├──► (importa) ── contact-detector.ts
+          │
+          ▼
+    Enviado a background vía chrome.runtime.sendMessage()
+
+    extension/src/popup/popup.ts ◄────→ service-worker.ts (sendMessage)
+    extension/src/options/options.ts ◄─→ service-worker.ts (sendMessage)
+
+    extension/src/background/service-worker.ts
+          │
+          ├──► WebSocket ──── server (ws://localhost:3001)
+          │
+          └──► chrome.tabs.sendMessage() ──► content/index.ts (todas las tabs)
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. SERVIDOR -->
+<!-- ============================================================ -->
+<h1 id="s3">3. Servidor WebSocket</h1>
+
+<h2 id="s3.1">3.1 server.ts — Punto de entrada</h2>
+
+<p><strong>Archivo:</strong> <code>server/src/server.ts</code></p>
+
+<p>Este archivo crea el servidor WebSocket en el puerto 3001 (configurable vía <code>PORT</code>). Es el <strong>punto central</strong> por donde pasan todos los mensajes.</p>
+
+<h3>Variables globales</h3>
+<table>
+  <tr><th>Variable</th><th>Valor</th><th>Descripción</th></tr>
+  <tr><td><code>PORT</code></td><td><code>process.env.PORT || 3001</code></td><td>Puerto de escucha</td></tr>
+  <tr><td><code>HEARTBEAT_INTERVAL</code></td><td><code>30000</code></td><td>30s entre verificaciones de heartbeat</td></tr>
+  <tr><td><code>roomManager</code></td><td><code>new RoomManager()</code></td><td>Instancia única de gestión de presencia</td></tr>
+</table>
+
+<h3>Diagrama de flujo del servidor</h3>
+
+<div class="diagram">
+                    SERVIDOR WEB SOCKET — FLUJO PRINCIPAL
+    ┌───────────────────────────────────────────────────────────────────┐
+    │                                                                   │
+    │  Inicio                                                          │
+    │    │                                                              │
+    │    ▼                                                              │
+    │  Crear WebSocketServer en puerto 3001                             │
+    │    │                                                              │
+    │    ├──► Iniciar intervalo de heartbeat (cada 30s)                │
+    │    │       │                                                      │
+    │    │       ▼                                                      │
+    │    │    roomManager.checkHeartbeats()                             │
+    │    │       │                                                      │
+    │    │       └──► Si agente sin actividad > 60s → marcar offline    │
+    │    │                                                              │
+    │    └──► Esperar conexiones entrantes                             │
+    │            │                                                      │
+    │            ▼                                                      │
+    │         Conexión entrante                                         │
+    │            │                                                      │
+    │            ▼                                                      │
+    │         Enviar WELCOME {"type":"WELCOME", ...}                    │
+    │            │                                                      │
+    │            ▼                                                      │
+    │         Esperar primer mensaje (autenticación)                    │
+    │            │                                                      │
+    │            ├──► ¿Es ATTENDING con agent name?                     │
+    │            │       │                                              │
+    │            │       ├──► Sí → roomManager.register(ws, name)      │
+    │            │       │       │                                      │
+    │            │       │       ▼                                      │
+    │            │       │    isAuthenticated = true                    │
+    │            │       │    roomManager.sendInitialState(agentId)     │
+    │            │       │                                              │
+    │            │       └──► Modo conversación:                        │
+    │            │               │                                      │
+    │            │               ▼                                      │
+    │            │            Mensaje del agente:                       │
+    │            │               │                                      │
+    │            │               ├──► ATTENDING → status='active'      │
+    │            │               ├──► PAUSED → status='paused'         │
+    │            │               ├──► AVAILABLE → status='available'   │
+    │            │               ├──► OFFLINE → status='offline'       │
+    │            │               └──► DELETE_AGENT → eliminar agente   │
+    │            │                      │                              │
+    │            │                      ▼                              │
+    │            │               roomManager.broadcastPresence()        │
+    │            │                                                      │
+    │            └──► No → Enviar ERROR AUTH_REQUIRED                  │
+    │                                                                    │
+    │       Cierre de conexión:                                         │
+    │            │                                                      │
+    │            ▼                                                      │
+    │         roomManager.disconnect(agentId)                           │
+    │            │                                                      │
+    │            └──► Si no hay remplazo → marcar offline               │
+    │                                                                   │
+    │  Graceful Shutdown (SIGINT/SIGTERM):                              │
+    │    wss.close(() → process.exit(0))                                │
+    └───────────────────────────────────────────────────────────────────┘
+</div>
+
+<h3>Ciclo de vida de una conexión</h3>
+
+<table>
+  <tr><th>Paso</th><th>Evento</th><th>Acción del Servidor</th></tr>
+  <tr><td>1</td><td><code>connection</code></td><td>Variables: <code>agentId = null</code>, <code>isAuthenticated = false</code>. Envía <code>WELCOME</code>. Configura ping cada 30s.</td></tr>
+  <tr><td>2</td><td><code>message</code> (1ro)</td><td>Debe ser <code>ATTENDING</code> con <code>agent</code>. Si válido → <code>register()</code> + autenticado. Si no → <code>ERROR</code>.</td></tr>
+  <tr><td>3</td><td><code>message</code> (siguientes)</td><td><code>roomManager.handleMessage(agentId, message)</code> según tipo.</td></tr>
+  <tr><td>4</td><td><code>close</code></td><td><code>roomManager.disconnect(agentId)</code> + limpiar ping.</td></tr>
+  <tr><td>5</td><td><code>error</code></td><td>Solo loguea el error.</td></tr>
+</table>
+
+<div class="pb"></div>
+
+<h2 id="s3.2">3.2 rooms.ts — RoomManager</h2>
+
+<p><strong>Archivo:</strong> <code>server/src/rooms.ts</code></p>
+
+<p>Es el <strong>corazón lógico</strong> del servidor. Gestiona el registro de agentes, su estado, y la difusión de cambios a todos los clientes conectados.</p>
+
+<h3>Estructuras de datos internas</h3>
+
+<table>
+  <tr><th>Estructura</th><th>Tipo</th><th>Clave</th><th>Valor</th><th>Propósito</th></tr>
+  <tr><td><code>agents</code></td><td><code>Map&lt;string, Agent&gt;</code></td><td><code>agentId</code></td><td>Datos del agente (nombre, estado, contacto, color)</td><td>Estado persistente de cada agente</td></tr>
+  <tr><td><code>connections</code></td><td><code>Map&lt;string, ClientConnection&gt;</code></td><td><code>agentId</code></td><td>WebSocket + nombre + ID</td><td>Conexiones activas de cada agente</td></tr>
+</table>
+
+<h3>Métodos del RoomManager</h3>
+
+<table>
+  <tr><th>Método</th><th>Parámetros</th><th>Retorno</th><th>Descripción</th></tr>
+  <tr><td><code>generateAgentId</code></td><td><code>name: string</code></td><td><code>string</code></td><td>Crea ID único: <code>"nombre-timestamp-4rand"</code></td></tr>
+  <tr><td><code>register</code></td><td><code>ws, name: string</code></td><td><code>string (agentId)</code></td><td>Registra agente nuevo o reconecta existente</td></tr>
+  <tr><td><code>handleMessage</code></td><td><code>agentId, message</code></td><td><code>void</code></td><td>Procesa ATTENDING/PAUSED/AVAILABLE/OFFLINE/DELETE_AGENT</td></tr>
+  <tr><td><code>disconnect</code></td><td><code>agentId</code></td><td><code>void</code></td><td>Maneja desconexión (marca offline si no hay remplazo)</td></tr>
+  <tr><td><code>getAllAgents</code></td><td><em>ninguno</em></td><td><code>Agent[]</code></td><td>Devuelve todos los agentes registrados</td></tr>
+  <tr><td><code>broadcastPresence</code></td><td><em>(privado)</em></td><td><code>void</code></td><td>Envía PRESENCE_UPDATE a TODOS los conectados</td></tr>
+  <tr><td><code>sendInitialState</code></td><td><code>agentId</code></td><td><code>void</code></td><td>Envía SERVER_INFO con estado actual al agente que recién conectó</td></tr>
+  <tr><td><code>checkHeartbeats</code></td><td><em>(automático)</em></td><td><code>void</code></td><td>Marca offline agentes sin actividad > 60s</td></tr>
+</table>
+
+<h3>Diagrama de registro de agente</h3>
+
+<div class="diagram">
+                    REGISTRO DE UN AGENTE (register)
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  register(ws, name)                                              │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  ¿Ya existe un agente con este nombre?                           │
+    │    │                                                             │
+    │    ├──► SÍ:                                                      │
+    │    │      1. Guardar nueva conexión (remplaza la anterior)       │
+    │    │      2. Cerrar WS anterior si es diferente                  │
+    │    │      3. Reusar el mismo ID y Agent                          │
+    │    │      4. status = 'available', contact = null                │
+    │    │      5. broadcastPresence()                                 │
+    │    │      6. Devolver ID existente                               │
+    │    │                                                             │
+    │    └──► NO:                                                      │
+    │           1. generateAgentId(name) → "Pedro-1705000-a1b2"       │
+    │           2. Crear nuevo Agent:                                  │
+    │              { id, name, status:'available', contact:null,       │
+    │                color:'#22C55E', lastSeen: Date.now() }          │
+    │           3. Guardar en agents y connections                     │
+    │           4. broadcastPresence()                                 │
+    │           5. Devolver nuevo ID                                   │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h3>Diagrama de broadcast</h3>
+
+<div class="diagram">
+                    BROADCAST DE PRESENCIA
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  broadcastPresence()                                             │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  1. agents = getAllAgents()                                      │
+    │                                                                  │
+    │  2. message = {                                                  │
+    │       type: 'PRESENCE_UPDATE',                                   │
+    │       agents: [                                                   │
+    │         { id, name, status, contact, color, lastSeen },          │
+    │         { id, name, status, contact, color, lastSeen },          │
+    │         ...                                                      │
+    │       ]                                                          │
+    │     }                                                            │
+    │                                                                  │
+    │  3. data = JSON.stringify(message)                               │
+    │                                                                  │
+    │  4. Para CADA conexión en this.connections:                      │
+    │       │                                                          │
+    │       ├──► Si ws.readyState === OPEN → ws.send(data)            │
+    │       └──► Si no → se omite (se limpiará en disconnect)          │
+    │                                                                  │
+    │  Resultado: TODOS los clientes reciben la misma lista            │
+    │  actualizada de agentes simultáneamente.                         │
+    │                                                                  │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<div class="pb"></div>
+
+<h2 id="s3.3">3.3 types.ts — Tipos del servidor</h2>
+
+<p><strong>Archivo:</strong> <code>server/src/types.ts</code></p>
+
+<div class="callout callout-warning">
+  <strong>⚠️ Nota importante</strong>
+  Este archivo es una <strong>copia exacta</strong> de <code>shared/types.ts</code>. Está duplicado porque el servidor usa <code>module: "NodeNext"</code> y no puede importar de <code>shared/</code> sin configuración adicional. Sería mejor refactorizarlo para compartir tipos.
+</div>
+
+<p>Define:</p>
+<ul>
+  <li><code>AgentStatus</code> — <code>'active' | 'paused' | 'available' | 'offline'</code></li>
+  <li><code>Agent</code> — Datos de un agente: id, name, status, contact, color, lastSeen</li>
+  <li>Interfaces de mensajes: <code>AttendingMessage</code>, <code>PausedMessage</code>, <code>AvailableMessage</code>, <code>OfflineMessage</code>, <code>DeleteAgentMessage</code></li>
+  <li>Interfaces de respuesta: <code>PresenceUpdate</code>, <code>ServerInfoMessage</code>, <code>ErrorMessage</code></li>
+  <li><strong>Type guards</strong>: funciones que verifican el tipo de mensaje (ej: <code>isAttendingMessage(msg)</code>)</li>
+  <li><code>STATUS_COLORS</code> y <code>STATUS_LABELS</code> — Diccionarios de colores y etiquetas en español</li>
+</ul>
+
+<!-- ============================================================ -->
+<!-- 4. EXTENSIÓN -->
+<!-- ============================================================ -->
+<h1 id="s4">4. Extensión de Chrome</h1>
+
+<h2 id="s4.1">4.1 Manifest V3 — Configuración</h2>
+
+<p><strong>Archivo:</strong> <code>extension/public/manifest.json</code></p>
+
+<p>Es el archivo de configuración que Chrome lee para saber cómo comportarse.</p>
+
+<table>
+  <tr><th>Campo</th><th>Valor</th><th>¿Qué hace?</th></tr>
+  <tr><td><code>manifest_version</code></td><td><code>3</code></td><td>Usa la API más moderna de extensiones Chrome</td></tr>
+  <tr><td><code>background.service_worker</code></td><td><code>"background/service-worker.js"</code></td><td>Script que corre siempre en segundo plano</td></tr>
+  <tr><td><code>background.type</code></td><td><code>"module"</code></td><td>El service worker usa módulos ES6</td></tr>
+  <tr><td><code>content_scripts[0].matches</code></td><td><code>["https://web.whatsapp.com/*"]</code></td><td>Solo se inyecta en WhatsApp Web</td></tr>
+  <tr><td><code>content_scripts[0].run_at</code></td><td><code>"document_idle"</code></td><td>Se ejecuta cuando la página terminó de cargar</td></tr>
+  <tr><td><code>permissions</code></td><td><code>["storage", "activeTab"]</code></td><td>Puede guardar datos y saber la pestaña activa</td></tr>
+  <tr><td><code>host_permissions</code></td><td><code>["https://web.whatsapp.com/*"]</code></td><td>Permiso explícito para WhatsApp Web</td></tr>
+  <tr><td><code>action.default_popup</code></td><td><code>"popup/popup.html"</code></td><td>Popup que se abre al hacer clic en el icono</td></tr>
+  <tr><td><code>web_accessible_resources</code></td><td><code>["icons/*.svg"]</code></td><td>Recursos accesibles desde páginas web</td></tr>
+</table>
+
+<div class="pb"></div>
+
+<h2 id="s4.2">4.2 Service Worker (background)</h2>
+
+<p><strong>Archivo:</strong> <code>extension/src/background/service-worker.ts</code></p>
+<p><strong>Clase:</strong> <code>BackgroundManager</code></p>
+
+<p>El Service Worker (SW) es el <strong>cerebro</strong> de la extensión. Vive de forma persistente en segundo plano y gestiona:</p>
+<ul>
+  <li>🔌 La conexión WebSocket con el servidor</li>
+  <li>🔄 Reconexión automática con backoff exponencial</li>
+  <li>💓 Heartbeat cada 30s para mantener la conexión viva</li>
+  <li>📡 Enrutamiento de mensajes entre popup, content scripts y servidor</li>
+  <li>💾 Persistencia de configuración en <code>chrome.storage.local</code></li>
+</ul>
+
+<h3>Variables de instancia</h3>
+<table>
+  <tr><th>Variable</th><th>Tipo</th><th>Descripción</th></tr>
+  <tr><td><code>ws</code></td><td><code>WebSocket | null</code></td><td>Conexión activa al servidor</td></tr>
+  <tr><td><code>config</code></td><td><code>AgentConfig | null</code></td><td>Configuración: agentName + serverUrl</td></tr>
+  <tr><td><code>agents</code></td><td><code>Map&lt;string, AgentState&gt;</code></td><td>Estado local de todos los agentes</td></tr>
+  <tr><td><code>currentTabId</code></td><td><code>number | null</code></td><td>ID de la pestaña activa actual</td></tr>
+  <tr><td><code>reconnectAttempts</code></td><td><code>number</code></td><td>Contador de intentos de reconexión (máx 10)</td></tr>
+  <tr><td><code>isIntentionallyClosed</code></td><td><code>boolean</code></td><td>Si el cierre fue intencional (no reconectar)</td></tr>
+  <tr><td><code>heartbeatTimer</code></td><td><code>number | null</code></td><td>ID del interval de heartbeat</td></tr>
+</table>
+
+<h3>Diagrama de estados del SW</h3>
+
+<div class="diagram">
+                    DIAGRAMA DE ESTADOS DEL SERVICE WORKER
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │         ┌──────────────┐                                         │
+    │         │  INICIO      │                                         │
+    │         │  (constructor)│                                         │
+    │         └──────┬───────┘                                         │
+    │                │                                                 │
+    │                ▼                                                 │
+    │         ┌──────────────┐                                         │
+    │         │  init()      │                                         │
+    │         │  • loadConfig│                                         │
+    │         │  • mensajes  │                                         │
+    │         │  • tabs      │                                         │
+    │         └──────┬───────┘                                         │
+    │                │                                                 │
+    │                ▼                                                 │
+    │         ┌──────────────┐     POPUP_READY      ┌──────────────┐  │
+    │         │  ESPERANDO   │─────────────────────►│  CONECTANDO  │  │
+    │         │  CONFIG      │                      │  (connect()) │  │
+    │         └──────────────┘                      └──────┬───────┘  │
+    │                                                      │          │
+    │                                                      ▼          │
+    │                                              ┌──────────────┐  │
+    │                         onOpen() ───────────►│  CONECTADO   │  │
+    │                                              │  • heartbeat │  │
+    │                                              │  • msg loop  │  │
+    │                                              └──────┬───────┘  │
+    │                                                      │          │
+    │                    ┌─────────────────────────────────┤          │
+    │                    │              │                   │         │
+    │                    ▼              ▼                   ▼         │
+    │          ┌──────────────┐ ┌──────────────┐  ┌──────────────┐  │
+    │          │ onClose()    │ │ onError()    │  │ disconnect() │  │
+    │          │ (no intenc.) │ │              │  │ (intencional)│  │
+    │          └──────┬───────┘ └──────┬───────┘  └──────┬───────┘  │
+    │                 │                │                   │          │
+    │                 ▼                ▼                   ▼          │
+    │          ┌────────────────────────────────────────────────┐     │
+    │          │  RECONECTANDO (backoff exponencial)            │     │
+    │          │  delay = min(1000 * 2^intentos, 30000)        │     │
+    │          │  intentos: 1..10                               │     │
+    │          └──────────────────────┬─────────────────────────┘     │
+    │                                 │                              │
+    │                                 ▼                              │
+    │                          ┌──────────────┐                     │
+    │                          │  connect()   │  (vuelve a CONECTANDO)│
+    │                          └──────────────┘                     │
+    │                                                                  │
+    │  Cuando isIntentionallyClosed = true → NO reconectar            │
+    │  Cuando reconnectAttempts >= 10 → NO más intentos               │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h3>Mensajes que maneja el SW</h3>
+
+<table>
+  <tr><th>Mensaje del Popup/Content</th><th>Acción del SW</th></tr>
+  <tr><td><code>CONNECT</code></td><td>Guarda config y llama a <code>connect()</code></td></tr>
+  <tr><td><code>POPUP_READY</code></td><td>Carga server URL, maneja cambios de nombre, conecta</td></tr>
+  <tr><td><code>ATTENDING</code></td><td>Envía estado 'active' + contacto al servidor</td></tr>
+  <tr><td><code>PAUSED</code></td><td>Envía estado 'paused' al servidor</td></tr>
+  <tr><td><code>RESUMED</code></td><td>Envía estado 'available' al servidor</td></tr>
+  <tr><td><code>AVAILABLE</code></td><td>Envía estado 'available' al servidor</td></tr>
+  <tr><td><code>CONTACT_CHANGED</code></td><td>Actualiza contacto y envía ATTENDING/AVAILABLE según estado</td></tr>
+  <tr><td><code>UPDATE_SERVER_URL</code></td><td>Cambia URL, desconecta y reconecta</td></tr>
+  <tr><td><code>GET_AGENTS</code></td><td>Responde con lista de agentes actual</td></tr>
+  <tr><td><code>CONTENT_READY</code></td><td>Envía estado completo a la pestaña (agentes, conexión, nombre)</td></tr>
+  <tr><td><code>GET_CONNECTION_STATUS</code></td><td>Responde con estado de conexión y nombre del agente</td></tr>
+  <tr><td><code>DELETE_AGENT</code></td><td>Elimina agente local y envía OFFLINE al servidor</td></tr>
+</table>
+
+<div class="pb"></div>
+
+<h2 id="s4.3">4.3 Content Script</h2>
+
+<p>El content script es el código que Chrome <strong>inyecta dentro de WhatsApp Web</strong>. Corre en el contexto de la página y puede acceder al DOM de WhatsApp, pero no a sus variables JavaScript internas.</p>
+
+<h3 id="s4.3.1">4.3.1 WhatsAppTeamSync (index.ts)</h3>
+
+<p><strong>Archivo:</strong> <code>extension/src/content/index.ts</code></p>
+<p><strong>Clase:</strong> <code>WhatsAppTeamSync</code></p>
+
+<p>Es el <strong>orquestador</strong> del content script. Coordina los 3 componentes principales y la comunicación con el SW.</p>
+
+<h4>Diagrama de inicialización</h4>
+
+<div class="diagram">
+                    INICIALIZACIÓN DEL CONTENT SCRIPT
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  new WhatsAppTeamSync()                                          │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  constructor() {                                                 │
+    │    • new DomObserver()                                           │
+    │    • new ContactDetector()                                       │
+    │    • new FloatingPanel() ← Shadow DOM ya se inyectó             │
+    │    • this.init()                                                 │
+    │  }                                                               │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  init() {                                                        │
+    │    │                                                             │
+    │    ├──► waitForWhatsAppReady()                                   │
+    │    │       │                                                     │
+    │    │       ├──► ¿Existe div[data-testid="chat-list"]?           │
+    │    │       │                                                      │
+    │    │       ├──► Sí → Resuelve                                   │
+    │    │       └──► No → requestAnimationFrame(check) (cada frame)  │
+    │    │                                                             │
+    │    ├──► setupEventListeners()                                    │
+    │    │       │                                                     │
+    │    │       ├──► DomObserver.onChatSelect(callback)              │
+    │    │       ├──► DomObserver.onChatDeselect(callback)            │
+    │    │       ├──► ContactDetector.startObserving(callback)        │
+    │    │       └──► chrome.runtime.onMessage.addListener()           │
+    │    │                                                             │
+    │    ├──► notifyBackgroundReady()                                  │
+    │    │       │                                                     │
+    │    │       └──► sendMessage({ type: 'CONTENT_READY' })          │
+    │    │                                                             │
+    │    └──► requestAgentName()                                       │
+    │            │                                                     │
+    │            └──► sendMessage({ type: 'GET_AGENT_NAME' })         │
+    │                ⚠️ NOTA: Este mensaje NO tiene manejador en el SW  │
+    │                                                                  │
+    │  ¡CONTENT SCRIPT LISTO! 🟢                                       │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h4>Variables</h4>
+<table>
+  <tr><th>Variable</th><th>Tipo</th><th>Descripción</th></tr>
+  <tr><td><code>domObserver</code></td><td><code>DomObserver</code></td><td>Detecta selección de chats</td></tr>
+  <tr><td><code>contactDetector</code></td><td><code>ContactDetector</code></td><td>Extrae nombre del contacto activo</td></tr>
+  <tr><td><code>floatingPanel</code></td><td><code>FloatingPanel</code></td><td>Panel visual en Shadow DOM</td></tr>
+  <tr><td><code>currentContact</code></td><td><code>string | null</code></td><td>Contacto actual que se está atendiendo</td></tr>
+  <tr><td><code>isPaused</code></td><td><code>boolean</code></td><td>Si el agente está pausado</td></tr>
+  <tr><td><code>config</code></td><td><code>AgentConfig | null</code></td><td>Nombre del agente + URL del servidor</td></tr>
+  <tr><td><code>currentAgentName</code></td><td><code>string | null</code></td><td>Nombre del agente actual</td></tr>
+</table>
+
+<h4>Flujo de cambio de chat</h4>
+
+<div class="diagram">
+                    FLUJO COMPLETO: AGENTE ABRE UN CHAT
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  Usuario hace clic en un chat en WhatsApp Web                    │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  DomObserver detecta:                                            │
+    │    • MutationObserver ve atributo aria-selected="true"           │
+    │    • O el chat recibió clic                                      │
+    │    │                                                             │
+    │    ▼ (con debounce 100ms)                                        │
+    │  handleChatSelection(chatElement)                                │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  emitChatSelected(chatElement)                                   │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  WhatsAppTeamSync.onChatSelected(name, element)                  │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  ¿contactName es null? ──► Sí ──► ContactDetector.detect()      │
+    │    │                                    │                        │
+    │    │                                    ▼                        │
+    │    │                              ¿Título del chat?              │
+    │    │                                    │                        │
+    │    │                              ┌─────┴─────┐                  │
+    │    │                              ▼           ▼                  │
+    │    │                           Nombre      null                  │
+    │    │                              │           │                  │
+    │    └──────────────────────────────┘           │                  │
+    │                  │                            │                  │
+    │                  ▼                            ▼                  │
+    │  currentContact = contacto        currentContact = null          │
+    │                  │                            │                  │
+    │                  ▼                            ▼                  │
+    │  updateBackgroundContact(contact)   updateBackgroundContact(null)│
+    │                  │                            │                  │
+    │                  ▼                            ▼                  │
+    │  Enviar al SW:                              Enviar al SW:        │
+    │  { type:'CONTACT_CHANGED',  ────────►  { type:'CONTACT_CHANGED',│
+    │    contact: "Doña Rosa" }                   contact: null }      │
+    │                  │                            │                  │
+    │                  ▼                            ▼                  │
+    │  SW.handleContactChanged("Doña Rosa")   SW.handleContactChanged()│
+    │    │                                    │                        │
+    │    ▼                                    ▼                        │
+    │  Enviar al servidor:                  Enviar al servidor:        │
+    │  { type:'ATTENDING',                  { type:'AVAILABLE',       │
+    │    agent:'Pedro',                       agent:'Pedro' }          │
+    │    contact:'Doña Rosa' }                                        │
+    │    │                                    │                        │
+    │    ▼                                    ▼                        │
+    │  Servidor marca 'active'              Servidor marca 'available' │
+    │  y broadcast a TODOS                   y broadcast a TODOS       │
+    │    │                                    │                        │
+    │    ▼ (todos los clientes reciben)       ▼                        │
+    │  FloatingPanel.updateAgents()          FloatingPanel.updateAgents│
+    │  Pedro → 🔴 Atendiendo a Doña Rosa     Pedro → 🟢 Disponible    │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<div class="pb"></div>
+
+<h3 id="s4.3.2">4.3.2 FloatingPanel</h3>
+
+<p><strong>Archivo:</strong> <code>extension/src/content/floating-panel.ts</code></p>
+<p><strong>Clase:</strong> <code>FloatingPanel</code></p>
+
+<p>Es el componente <strong>visual</strong> de la extensión. Crea un panel flotante sobre WhatsApp Web usando <strong>Shadow DOM</strong> para aislar sus estilos de los de WhatsApp.</p>
+
+<h4>Características principales</h4>
+<ul>
+  <li>🛡️ <strong>Shadow DOM</strong> — Estilos completamente aislados de WhatsApp</li>
+  <li>🌓 <strong>Modo oscuro</strong> automático según preferencias del sistema</li>
+  <li>🎭 <strong>Colapsable</strong> — Se minimiza a un badge circular verde</li>
+  <li>💾 <strong>Persistencia</strong> — Recuerda si estaba colapsado (localStorage)</li>
+  <li>🎨 <strong>Gradiente verde</strong> — Diseño inspirado en WhatsApp</li>
+  <li>♿ <strong>Accesibilidad</strong> — Soporte para teclado (Escape), aria-labels, prefers-reduced-motion</li>
+  <li>📱 <strong>Scrollbar</strong> personalizada para la lista de agentes</li>
+</ul>
+
+<h4>Estructura del DOM (Shadow)</h4>
+
+<div class="diagram">
+                    ESTRUCTURA DEL SHADOW DOM
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  #wts-floating-panel-host (en body de WhatsApp)                  │
+    │    position: fixed; top: 20px; right: 20px; z-index: max        │
+    │    │                                                             │
+    │    └── #shadow-root (open)                                       │
+    │          │                                                       │
+    │          ├── &lt;style&gt; (todos los estilos aislados aquí)          │
+    │          │                                                       │
+    │          ├── .wts-panel ───────────────────┐                    │
+    │          │   ├── .wts-header ─────────────┐ │                    │
+    │          │   │  ├── &lt;h3&gt;                 │ │                    │
+    │          │   │  │   ├── .wts-logo "W"     │ │                    │
+    │          │   │  │   └── "WhatsApp Team    │ │                    │
+    │          │   │  │        Sync"            │ │                    │
+    │          │   │  └── &lt;button&gt; .wts-toggle │ │                    │
+    │          │   │       (flecha colapsar)    │ │                    │
+    │          │   ├── .wts-agents              │ │                    │
+    │          │   │   ├── .wts-agent           │ │                    │
+    │          │   │   │   ├── .wts-agent-avatar │ │                   │
+    │          │   │   │   ├── .wts-agent-info  │ │                   │
+    │          │   │   │   │   ├── .wts-agent-name │ │                │
+    │          │   │   │   │   └── .wts-agent-status │ │              │
+    │          │   │   │   │       ├── .wts-status-dot                │
+    │          │   │   │   │       ├── "Disponible"                   │
+    │          │   │   │   │       └── .wts-agent-contact             │
+    │          │   │   │   └── .wts-delete-btn (solo si es el user)   │
+    │          │   │   └── ... (más agentes)                          │
+    │          │   └── .wts-server-status                             │
+    │          │        ├── "Conectado al servidor ✓"                 │
+    │          │        └── o "Servidor desconectado ⚠️"             │
+    │          │                                                       │
+    │          └── &lt;button&gt; .wts-collapsed-badge (solo colapsado)   │
+    │                "→ 3" (flecha + conteo de agentes activos)       │
+    │                                                                  │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h4>API Pública</h4>
+<table>
+  <tr><th>Método</th><th>Parámetros</th><th>¿Qué hace?</th></tr>
+  <tr><td><code>updateAgents()</code></td><td><code>agents: Agent[]</code></td><td>Renderiza la lista de agentes (avatares, nombres, estados, contactos)</td></tr>
+  <tr><td><code>updateCurrentUserStatus()</code></td><td><code>status: AgentStatus</code></td><td>Actualiza solo el estado visual del usuario actual</td></tr>
+  <tr><td><code>updateCurrentUserName()</code></td><td><code>name: string</code></td><td>Guarda el nombre del usuario actual</td></tr>
+  <tr><td><code>updateServerStatus()</code></td><td><code>connected: boolean</code></td><td>Muestra "Conectado ✓" o "Desconectado ⚠️" en el footer</td></tr>
+  <tr><td><code>toggleCollapse()</code></td><td><em>ninguno</em></td><td>Alterna entre expandido y colapsado</td></tr>
+</table>
+
+<h4>Modelo de agente en el panel</h4>
+
+<div class="diagram">
+                    EJEMPLO VISUAL DE AGENTES EN EL PANEL
+    ┌──────────────────────────────────────────────────────────────┐
+    │  ┌────────────────────────────────────────────────────────┐ │
+    │  │  💬 WhatsApp Team Sync                           ◀ │ │
+    │  ├────────────────────────────────────────────────────────┤ │
+    │  │                                                        │ │
+    │  │  [P] Pedro                                        🗑️ │ │
+    │  │       🟢 Disponible                                  │ │
+    │  │                                                        │ │
+    │  │  [M] María                                        🗑️ │ │
+    │  │       🔴 Atendiendo a Doña Rosa                      │ │
+    │  │                                                        │ │
+    │  │  [J] Juan                                         🗑️ │ │
+    │  │       🟡 Pausado                                     │ │
+    │  │                                                        │ │
+    │  │  [L] Luis                                         🗑️ │ │
+    │  │       ⚫ Desconectado                                 │ │
+    │  │                                                        │ │
+    │  ├────────────────────────────────────────────────────────┤ │
+    │  │  ✓ Conectado al servidor                               │ │
+    │  └────────────────────────────────────────────────────────┘ │
+    │                                                            │
+    │  [→ 3]  (badge cuando está colapsado)                      │
+    └──────────────────────────────────────────────────────────────┘
+</div>
+
+<div class="pb"></div>
+
+<h3 id="s4.3.3">4.3.3 DomObserver</h3>
+
+<p><strong>Archivo:</strong> <code>extension/src/content/dom-observer.ts</code></p>
+<p><strong>Clase:</strong> <code>DomObserver</code></p>
+
+<p>Observa cambios en el DOM de WhatsApp Web para detectar cuándo un agente <strong>selecciona o deselecciona un chat</strong>.</p>
+
+<h4>Selectores CSS utilizados</h4>
+<table>
+  <tr><th>Constante</th><th>Selector</th><th>Propósito</th></tr>
+  <tr><td><code>CHAT_LIST_SELECTOR</code></td><td><code>div[data-testid="chat-list"]</code></td><td>Contenedor de la lista de chats</td></tr>
+  <tr><td><code>CHAT_ITEM_SELECTOR</code></td><td><code>div[data-testid="cell-frame-container"]</code></td><td>Cada item de chat individual</td></tr>
+</table>
+
+<h4>Métodos principales</h4>
+<table>
+  <tr><th>Método</th><th>Descripción</th></tr>
+  <tr><td><code>onChatSelect(callback)</code></td><td>Registra callback para cuando se selecciona un chat. Devuelve función para desuscribirse.</td></tr>
+  <tr><td><code>onChatDeselect(callback)</code></td><td>Registra callback para cuando se deselecciona un chat.</td></tr>
+  <tr><td><code>restart()</code></td><td>Reinicia el observer (útil cuando WhatsApp recarga la SPA).</td></tr>
+  <tr><td><code>stopObserving()</code></td><td>Detiene la observación y limpia recursos.</td></tr>
+  <tr><td><code>isActive()</code></td><td>Devuelve si el observer está activo.</td></tr>
+</table>
+
+<h4>Estrategia de detección</h4>
+<p>El <code>DomObserver</code> usa <strong>3 mecanismos</strong> simultáneos:</p>
+<ol>
+  <li><strong>MutationObserver</strong> — Detecta cambios de atributos (<code>aria-selected</code>, <code>tabindex</code>) y nuevos elementos en la lista</li>
+  <li><strong>Click listeners</strong> — Detects clicks directos en los items del chat</li>
+  <li><strong>Debounce</strong> — 100ms para selección, 300ms para deselección (evita falsos positivos)</li>
+</ol>
+<p>Además, observa cambios en la URL (las SPAs cambian la URL sin recargar la página) y reinicia el observer cuando detecta una navegación.</p>
+
+<h3 id="s4.3.4">4.3.4 ContactDetector</h3>
+
+<p><strong>Archivo:</strong> <code>extension/src/content/contact-detector.ts</code></p>
+<p><strong>Clase:</strong> <code>ContactDetector</code></p>
+
+<p>Extrae el <strong>nombre del contacto activo</strong> del panel de conversación de WhatsApp Web.</p>
+
+<h4>Selectores CSS utilizados</h4>
+<table>
+  <tr><th>Constante</th><th>Selector</th><th>Propósito</th></tr>
+  <tr><td><code>CONVERSATION_PANEL_SELECTOR</code></td><td><code>div[data-testid="conversation-panel-wrapper"]</code></td><td>Panel de la conversación activa</td></tr>
+  <tr><td><code>CHAT_TITLE_SELECTOR</code></td><td><code>header span[data-testid="conversation-info-header-chat-title"]</code></td><td>Nombre del contacto en el header</td></tr>
+  <tr><td><code>BUSINESS_BADGE_SELECTOR</code></td><td><code>span[data-testid="verified-badge"]</code></td><td>Badge de cuenta verificada (empresas)</td></tr>
+</table>
+
+<h4>Métodos principales</h4>
+<table>
+  <tr><th>Método</th><th>Descripción</th></tr>
+  <tr><td><code>detectCurrentContact()</code></td><td>Espera 500ms, extrae el nombre del contacto, devuelve el último conocido si el panel existe pero el título aún no cargó</td></tr>
+  <tr><td><code>startObserving(callback)</code></td><td>Crea MutationObserver sobre el panel de conversación. Si no existe el panel, hace polling cada 500ms hasta que aparezca</td></tr>
+  <tr><td><code>stopObserving()</code></td><td>Detiene observer y polling</td></tr>
+  <tr><td><code>getCurrentContact()</code></td><td>Devuelve el contacto actual</td></tr>
+  <tr><td><code>getLastKnownContact()</code></td><td>Devuelve el último contacto conocido (aunque ya no esté en el panel)</td></tr>
+</table>
+
+<div class="pb"></div>
+
+<h2 id="s4.4">4.4 Popup</h2>
+
+<p><strong>Archivo:</strong> <code>extension/src/popup/popup.ts</code></p>
+
+<p>Es la interfaz que aparece al hacer clic en el icono de la extensión en la barra de Chrome. Permite al agente:</p>
+<ul>
+  <li>✅ Seleccionar su nombre de una lista precargada</li>
+  <li>➕ Añadir agentes nuevos a la lista</li>
+  <li>✏️ Conectarse con un nombre personalizado</li>
+  <li>⏸️ Pausar/Reanudar su atención</li>
+  <li>👀 Ver estado de conexión al servidor</li>
+  <li>🔄 Cambiar de agente</li>
+  <li>🗑️ Eliminar agentes de la lista</li>
+</ul>
+
+<h4>Vistas del Popup</h4>
+<table>
+  <tr><th>Vista</th><th>ID</th><th>¿Cuándo se muestra?</th></tr>
+  <tr><td>⚙️ Setup</td><td><code>setup-view</code></td><td>Primera vez o cuando se cambia de agente</td></tr>
+  <tr><td>✅ Conectado</td><td><code>connected-view</code></td><td>Cuando un agente está activo</td></tr>
+  <tr><td>❌ Error</td><td><code>error-view</code></td><td>Cuando hay error de conexión</td></tr>
+</table>
+
+<h4>Diagrama de vistas</h4>
+
+<div class="diagram">
+                    DIAGRAMA DE VISTAS DEL POPUP
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │          ┌──────────────────────────────────────┐                │
+    │          │       VISTA SETUP                     │                │
+    │          │                                        │                │
+    │          │  💬 WhatsApp Team Sync                  │                │
+    │          │  ─────────────────────────────────────  │                │
+    │          │  Selecciona tu agente                   │                │
+    │          │                                        │                │
+    │          │  ┌──────────────────────────────────┐  │                │
+    │          │  │ [P] Pedro               [🗑️]  │  │                │
+    │          │  │ [M] María               [🗑️]  │  │                │
+    │          │  │ [J] Juan                [🗑️]  │  │                │
+    │          │  └──────────────────────────────────┘  │                │
+    │          │                                        │                │
+    │          │  [+ Añadir agente]                     │                │
+    │          │  ────────────── o ──────────────       │                │
+    │          │  [_______________] [Conectar]          │                │
+    │          │   (nombre personalizado)               │                │
+    │          └──────────────────────────────────────┘                 │
+    │                          │                                        │
+    │                          ▼ (seleccionar agente)                  │
+    │                          │                                        │
+    │          ┌──────────────────────────────────────┐                │
+    │          │       VISTA CONECTADO                  │                │
+    │          │                                        │                │
+    │          │  💬 WhatsApp Team Sync                  │                │
+    │          │  ─────────────────────────────────────  │                │
+    │          │                                        │                │
+    │          │  [🟢] Pedro                    [Disponible]           │
+    │          │       Conectado                                       │
+    │          │                                        │                │
+    │          │  [⏸ Pausar]  [▶ Disponible]           │                │
+    │          │                                        │                │
+    │          │  [Cambiar de agente]                   │                │
+    │          │                                        │                │
+    │          │  ⚠️ Servidor desconectado (si aplica)  │                │
+    │          └──────────────────────────────────────┘                 │
+    │                                                                  │
+    │          ┌──────────────────────────────────────┐                │
+    │          │       VISTA ERROR                      │                │
+    │          │                                        │                │
+    │          │  Error de conexión                     │                │
+    │          │  [Reintentar]                          │                │
+    │          └──────────────────────────────────────┘                 │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h4>Flujo de interacción del usuario</h4>
+
+<div class="diagram">
+                    INTERACCIÓN DEL USUARIO CON EL POPUP
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  Usuario hace clic en el icono de la extensión                   │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  init()                                                          │
+    │    │                                                             │
+    │    ├──► loadConfig() → ¿Hay agente configurado?                  │
+    │    │       │                                                      │
+    │    │       ├──► Sí → Mostrar 'connected-view'                    │
+    │    │       │       │                                             │
+    │    │       │       └──► GET_CONNECTION_STATUS → actualizar UI    │
+    │    │       │                                                      │
+    │    │       └──► No → Mostrar 'setup-view'                       │
+    │    │               │                                              │
+    │    │               └──► renderAgentList()                        │
+    │    │                                                             │
+    │    └──► Escuchar mensajes del background                         │
+    │                                                                    │
+    │  [Usuario selecciona "Pedro" de la lista]                        │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  selectAgent("Pedro")                                            │
+    │    │                                                             │
+    │    ├──► Config = { agentName: "Pedro", serverUrl: "ws://3001" } │
+    │    ├──► saveConfig(config)                                       │
+    │    ├──► Mostrar 'connected-view' con "Conectando..."             │
+    │    └──► sendMessage({ type: 'POPUP_READY', agentName: "Pedro" }) │
+    │                                                                    │
+    │  [Usuario hace clic en "Pausar"]                                 │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  isPaused = true                                                 │
+    │  Ocultar botón Pausar, mostrar botón Disponible                  │
+    │  updateBadge('Pausado')                                          │
+    │  sendMessage({ type: 'PAUSED' })                                 │
+    │                                                                    │
+    │  [Usuario hace clic en "Disponible"]                             │
+    │    │                                                             │
+    │    ▼                                                             │
+    │  isPaused = false                                                │
+    │  Mostrar botón Pausar, ocultar botón Disponible                  │
+    │  updateBadge('Disponible')                                        │
+    │  sendMessage({ type: 'RESUMED' })                                │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h4>Funciones clave</h4>
+<table>
+  <tr><th>Función</th><th>Descripción</th></tr>
+  <tr><td><code>loadConfig() / saveConfig()</code></td><td>Persistencia de la configuración actual del agente</td></tr>
+  <tr><td><code>loadAgentList() / saveAgentList()</code></td><td>Gestión de la lista de agentes disponibles (3 por defecto)</td></tr>
+  <tr><td><code>renderAgentList()</code></td><td>Renderiza la lista con avatares de colores y botones eliminar</td></tr>
+  <tr><td><code>selectAgent(name)</code></td><td>Conecta como un agente específico</td></tr>
+  <tr><td><code>showView(view)</code></td><td>Cambia entre vistas (setup, connected, error)</td></tr>
+  <tr><td><code>updateStatus(connected, connecting)</code></td><td>Actualiza indicador visual de conexión (🟢🟡🔴)</td></tr>
+  <tr><td><code>updateBadge(status)</code></td><td>Actualiza badge de estado (Disponible/Pausado/Atendiendo/Desconectado)</td></tr>
+</table>
+
+<div class="pb"></div>
+
+<h2 id="s4.5">4.5 Options (Configuración)</h2>
+
+<p><strong>Archivo:</strong> <code>extension/src/options/options.ts</code></p>
+
+<p>Página de opciones accesible desde <code>chrome://extensions</code>. Permite:</p>
+<ul>
+  <li>🔧 Configurar la URL del servidor WebSocket</li>
+  <li>📡 Probar la conexión al servidor</li>
+  <li>ℹ️ Ver versión de la extensión y estado del servidor</li>
+  <li>⚠️ Restablecer configuración a valores predeterminados</li>
+</ul>
+
+<h4>Funciones clave</h4>
+<table>
+  <tr><th>Función</th><th>Descripción</th></tr>
+  <tr><td><code>loadSettings()</code></td><td>Carga URL guardada, versión y verifica estado del servidor</td></tr>
+  <tr><td><code>saveSettings()</code></td><td>Valida URL (debe ser ws:// o wss://), guarda y notifica al SW</td></tr>
+  <tr><td><code>testConnection()</code></td><td>Crea WebSocket de prueba, timeout 5s, muestra resultado</td></tr>
+  <tr><td><code>testWebSocket(url)</code></td><td>Función helper que devuelve Promise&lt;boolean&gt; según la conexión</td></tr>
+  <tr><td><code>updateServerStatus()</code></td><td>Prueba conexión y muestra "Conectado" o "Desconectado"</td></tr>
+  <tr><td><code>resetAll()</code></td><td>Limpia todo el storage y restaura URL por defecto</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<!-- 5. PROTOCOLO -->
+<!-- ============================================================ -->
+<h1 id="s5">5. Protocolo de Comunicación</h1>
+
+<p>Toda la comunicación usa <strong>JSON sobre WebSocket</strong>. Cada mensaje tiene un campo <code>type</code> que identifica su propósito.</p>
+
+<h2 id="s5.1">5.1 Mensajes Cliente → Servidor</h2>
+
+<table>
+  <tr><th>Tipo</th><th>Ejemplo</th><th>¿Cuándo se envía?</th></tr>
+  <tr><td><code>ATTENDING</code></td><td><code>{"type":"ATTENDING","agent":"Pedro","contact":"Doña Rosa","status":"active"}</code></td><td>Cuando un agente abre un chat</td></tr>
+  <tr><td><code>PAUSED</code></td><td><code>{"type":"PAUSED","agent":"Pedro","reason":"user_paused"}</code></td><td>Cuando un agente se pausa</td></tr>
+  <tr><td><code>AVAILABLE</code></td><td><code>{"type":"AVAILABLE","agent":"Pedro"}</code></td><td>Cuando un agente vuelve a estar disponible</td></tr>
+  <tr><td><code>OFFLINE</code></td><td><code>{"type":"OFFLINE","agent":"Pedro"}</code></td><td>Cuando un agente se desconecta</td></tr>
+  <tr><td><code>DELETE_AGENT</code></td><td><code>{"type":"DELETE_AGENT","agent":"Pedro"}</code></td><td>Cuando se elimina un agente permanentemente</td></tr>
+  <tr><td><code>HEARTBEAT</code></td><td><code>{"type":"HEARTBEAT","agent":"Pedro"}</code></td><td>Cada 30s para mantener la conexión viva</td></tr>
+</table>
+
+<h2 id="s5.2">5.2 Mensajes Servidor → Cliente</h2>
+
+<table>
+  <tr><th>Tipo</th><th>Ejemplo</th><th>¿Cuándo se envía?</th></tr>
+  <tr><td><code>WELCOME</code></td><td><code>{"type":"WELCOME","message":"Connected...","protocol":"1.0.0"}</code></td><td>Apenas se conecta un nuevo cliente</td></tr>
+  <tr><td><code>PRESENCE_UPDATE</code></td><td><code>{"type":"PRESENCE_UPDATE","agents":[...]}</code></td><td>Cada vez que cambia el estado de algún agente</td></tr>
+  <tr><td><code>SERVER_INFO</code></td><td><code>{"type":"SERVER_INFO","version":"1.0.0","agents":[...]}</code></td><td>Cuando un agente se autentica (estado inicial)</td></tr>
+  <tr><td><code>ERROR</code></td><td><code>{"type":"ERROR","code":"AUTH_REQUIRED","message":"..."}</code></td><td>Cuando hay un error (autenticación, parseo, etc.)</td></tr>
+</table>
+
+<div class="pb"></div>
+
+<!-- ============================================================ -->
+<!-- 6. DIAGRAMAS -->
+<!-- ============================================================ -->
+<h1 id="s6">6. Diagramas de Flujo</h1>
+
+<h2 id="s6.1">6.1 Ciclo de conexión de un agente</h2>
+
+<div class="diagram">
+                    CICLO COMPLETO: CONEXIÓN DE UN AGENTE
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  Agente              Popup           Service Worker     Servidor │
+    │  (Persona)                                                     │
+    │    │                   │                  │               │     │
+    │    │  1. Abre popup    │                  │               │     │
+    │    │──────────────────►│                  │               │     │
+    │    │                   │                  │               │     │
+    │    │  2. Elige "Pedro" │                  │               │     │
+    │    │──────────────────►│                  │               │     │
+    │    │                   │                  │               │     │
+    │    │                   │3. POPUP_READY   │               │     │
+    │    │                   │────────────────►│               │     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │4. connect()  │     │
+    │    │                   │                  │──────────────►│     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │  5. WELCOME   │     │
+    │    │                   │                  │◄──────────────│     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │6. ATTENDING   │     │
+    │    │                   │                  │──────────────►│     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │  7. register()│     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │8. SERVER_INFO │     │
+    │    │                   │                  │◄──────────────│     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │9. PRESENCE    │     │
+    │    │                   │                  │◄──────────────│     │
+    │    │                   │                  │   UPDATE      │     │
+    │    │                   │                  │               │     │
+    │    │                   │                  │10. Presencia  │     │
+    │    │                   │                  │  a content    │     │
+    │    │                   │                  │──────┬───────►│     │
+    │    │                   │                  │      │        │     │
+    │    │                   │                  │      ▼        │     │
+    │    │                   │                  │  FloatingPanel│     │
+    │    │                   │                  │  actualizado  │     │
+    │    │                   │                  │               │     │
+    │    │  11. ¡Conectado!  │                  │               │     │
+    │    │◄──────────────────│                  │               │     │
+    │    │                   │                  │               │     │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h2 id="s6.2">6.2 Detección de cambio de chat</h2>
+
+<div class="diagram">
+                    FLUJO: AGENTE CAMBIA DE CHAT
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │  WhatsApp Web       DomObserver    ContactDetector   SW/Servidor │
+    │                                                                  │
+    │    │                    │                │               │      │
+    │    │ 1. Click en chat   │                │               │      │
+    │    │──────────────────►│                │               │      │
+    │    │                    │                │               │      │
+    │    │ 2. Mutation:       │                │               │      │
+    │    │    aria-selected   │                │               │      │
+    │    │──────────────────►│                │               │      │
+    │    │                    │                │               │      │
+    │    │ 3. Debounce 100ms  │                │               │      │
+    │    │                    │                │               │      │
+    │    │ 4. isChatSelected  │                │               │      │
+    │    │    = true          │                │               │      │
+    │    │                    │                │               │      │
+    │    │ 5. Extraer nombre  │                │               │      │
+    │    │    del chat item   │                │               │      │
+    │    │                    │                │               │      │
+    │    │ 6. emitChatSelected(name)          │               │      │
+    │    │───────────────────────────────────►│               │      │
+    │    │                    │                │               │      │
+    │    │                    │   7. Extraer título             │      │
+    │    │                    │      del panel                  │      │
+    │    │                    │                │               │      │
+    │    │                    │   8. "Doña Rosa"                │      │
+    │    │                    │◄───────────────│               │      │
+    │    │                    │                │               │      │
+    │    │   9. CONTACT_CHANGED (Doña Rosa)    │               │      │
+    │    │                    │───────────────────────────────►│      │
+    │    │                    │                │               │      │
+    │    │                    │                │  10. ATTENDING│      │
+    │    │                    │                │  (Pedro,      │      │
+    │    │                    │                │   Doña Rosa)  │      │
+    │    │                    │                │               │      │
+    │    │                    │                │  11. Broadcast│      │
+    │    │                    │                │  PRESENCE_UPDATE     │
+    │    │                    │                │               │      │
+    │    │   12. Panel actualizado:                              │      │
+    │    │   "Pedro → 🔴 Atendiendo a Doña Rosa"                │      │
+    │    │                    │                │               │      │
+    │    │   TODO ESTO EN MENOS DE 500ms ⚡                     │      │
+    │                                                                  │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<div class="pb"></div>
+
+<h2 id="s6.3">6.3 Reconexión automática</h2>
+
+<div class="diagram">
+                    FLUJO: RECONEXIÓN AUTOMÁTICA
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │          Service Worker              Servidor                    │
+    │                                                                  │
+    │              │                          │                        │
+    │      ┌───────┴───────┐                  │                        │
+    │      │  WebSocket    │                  │                        │
+    │      │  CONECTADO    │                  │                        │
+    │      └───────┬───────┘                  │                        │
+    │              │                          │                        │
+    │              │   onClose() (inesperado) │                        │
+    │              │◄─────────────────────────│                        │
+    │              │                          │                        │
+    │              ▼                          │                        │
+    │      ┌───────────────┐                  │                        │
+    │      │ scheduleReconnect()             │                        │
+    │      │ intento = 1                     │                        │
+    │      │ delay = 1000ms                  │                        │
+    │      └───────┬───────┘                  │                        │
+    │              │                          │                        │
+    │              ▼                          │                        │
+    │      ┌───────────────┐                  │                        │
+    │      │ connect()     │─────────────────►│                        │
+    │      │               │◄─────────────────│                        │
+    │      │ (intento 1)   │   Error/Cierra   │                        │
+    │      └───────┬───────┘                  │                        │
+    │              │                          │                        │
+    │              ▼                          │                        │
+    │      ┌───────────────┐                  │                        │
+    │      │ scheduleReconnect()             │                        │
+    │      │ intento = 2                     │                        │
+    │      │ delay = 2000ms                  │                        │
+    │      └───────┬───────┘                  │                        │
+    │              │                          │                        │
+    │         ... (sigue intentando)          │                        │
+    │              │                          │                        │
+    │      ┌───────────────┐                  │                        │
+    │      │ scheduleReconnect()             │                        │
+    │      │ intento = 5                     │                        │
+    │      │ delay = 16000ms  ← máximo       │                        │
+    │      └───────┬───────┘                  │                        │
+    │              │                          │                        │
+    │              ▼                          │                        │
+    │      ┌───────────────┐                  │                        │
+    │      │ connect()     │─────────────────►│                        │
+    │      │               │◄─────────────────│                        │
+    │      │ (intento 5)   │   ¡ÉXITO!        │                        │
+    │      │               │   onOpen()       │                        │
+    │      └───────┬───────┘                  │                        │
+    │              │                          │                        │
+    │              ▼                          │                        │
+    │      ┌───────────────┐                  │                        │
+    │      │ reconnectAttempts = 0            │                        │
+    │      │ startHeartbeat()                 │                        │
+    │      │ isIntentionallyClosed = false    │                        │
+    │      │ WebSocket CONECTADO 🟢           │                        │
+    │      └───────────────────┘              │                        │
+    │                                                                  │
+    │  Backoff exponencial:                                           │
+    │  intento  1 →  1,000ms                                          │
+    │  intento  2 →  2,000ms                                          │
+    │  intento  3 →  4,000ms                                          │
+    │  intento  4 →  8,000ms                                          │
+    │  intento  5 → 16,000ms (máximo 30,000ms)                        │
+    │  ...                                                              │
+    │  intento 10 → 30,000ms (máximo)                                 │
+    │  Límite: 10 intentos (si falla, se rinde)                       │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<h2 id="s6.4">6.4 Broadcast de presencia</h2>
+
+<div class="diagram">
+                    FLUJO: BROADCAST DE PRESENCIA
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │    Un agente cambia                                             │
+    │    su estado                                                     │
+    │         │                                                       │
+    │         ▼                                                       │
+    │    ┌──────────────────────┐                                     │
+    │    │  handleMessage()     │                                     │
+    │    │  rooms.ts            │                                     │
+    │    └──────────┬───────────┘                                     │
+    │               │                                                 │
+    │               ▼                                                 │
+    │    ┌──────────────────────┐     ┌──────────────────────────┐   │
+    │    │  Actualizar estado   │     │  Agent:                  │   │
+    │    │  del agente en el    │────►│  - status → 'active'     │   │
+    │    │  Map interno         │     │  - contact → 'Doña Rosa' │   │
+    │    │                      │     │  - lastSeen → now()      │   │
+    │    └──────────────────────┘     └──────────────────────────┘   │
+    │               │                                                 │
+    │               ▼                                                 │
+    │    ┌──────────────────────┐                                     │
+    │    │  broadcastPresence() │                                     │
+    │    └──────────┬───────────┘                                     │
+    │               │                                                 │
+    │               ▼                                                 │
+    │    ┌────────────────────────────────────────────────────┐       │
+    │    │  Para CADA conexión en this.connections:          │       │
+    │    │                                                    │       │
+    │    │  ┌──► Cliente 1 (María)  → ws.send(data) ✓       │       │
+    │    │  ├──► Cliente 2 (Juan)   → ws.send(data) ✓       │       │
+    │    │  ├──► Cliente 3 (Pedro)  → ws.send(data) ✓       │       │
+    │    │  └──► Cliente 4 (Luis)   → ws.readyState ≠ OPEN ✗ │       │
+    │    │                                                    │       │
+    │    └────────────────────────────────────────────────────┘       │
+    │               │                                                 │
+    │               ▼ (todos los clientes simultáneamente)            │
+    │                                                                  │
+    │    ┌────────────────────────────────────────────────────┐       │
+    │    │  Cada cliente recibe:                              │       │
+    │    │                                                    │       │
+    │    │  {                                                  │       │
+    │    │    "type": "PRESENCE_UPDATE",                      │       │
+    │    │    "agents": [                                     │       │
+    │    │      { "name": "Pedro", "status": "active",        │       │
+    │    │        "contact": "Doña Rosa",   ... },             │       │
+    │    │      { "name": "María", "status": "available", ... },      │
+    │    │      { "name": "Juan", "status": "paused", ... }           │
+    │    │    ]                                                │       │
+    │    │  }                                                  │       │
+    │    │                                                    │       │
+    │    └────────────────────────────────────────────────────┘       │
+    │               │                                                 │
+    │               ▼                                                 │
+    │    ┌──────────────────────┐                                     │
+    │    │  Service Worker      │                                     │
+    │    │  handlePresenceUpdate│                                     │
+    │    └──────────┬───────────┘                                     │
+    │               │                                                 │
+    │               ▼                                                 │
+    │    ┌──────────────────────┐                                     │
+    │    │  broadcastToContent()│                                     │
+    │    │  (chrome.tabs)       │                                     │
+    │    └──────────┬───────────┘                                     │
+    │               │                                                 │
+    │               ▼                                                 │
+    │    ┌──────────────────────┐                                     │
+    │    │  FloatingPanel       │                                     │
+    │    │  updateAgents()      │                                     │
+    │    │  "Pedro → 🔴..."    │                                     │
+    │    └──────────────────────┘                                     │
+    │                                                                  │
+    │  ⏱️ Tiempo total: ~10-50ms desde que el agente cambia           │
+    │     hasta que todos los paneles se actualizan                   │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<div class="pb"></div>
+
+<!-- ============================================================ -->
+<!-- 7. ESTADOS -->
+<!-- ============================================================ -->
+<h1 id="s7">7. Estados y Colores</h1>
+
+<h3>Estados de un agente</h3>
+
+<div class="flow-row">
+  <div class="flow-box green">🟢 Disponible</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box red">🔴 Atendiendo</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box yellow">🟡 Pausado</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box gray">⚫ Desconectado</div>
+</div>
+
+<div class="flow-row">
+  <div class="flow-box green">🟢 Disponible</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box yellow">🟡 Pausado</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box green">🟢 Disponible</div>
+</div>
+
+<div class="flow-row">
+  <div class="flow-box red">🔴 Atendiendo</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box green">🟢 Disponible</div>
+</div>
+
+<div class="flow-row">
+  <div class="flow-box gray">⚫ Desconectado</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box green">🟢 Disponible</div>
+  <span class="flow-arrow">→</span>
+  (reconexión)
+</div>
+
+<h3>Tabla de estados</h3>
+
+<table>
+  <tr><th>Estado</th><th>Indicador</th><th>Color</th><th>Hex</th><th>Descripción</th></tr>
+  <tr><td>Disponible</td><td><span class="dot dot-green"></span> Verde</td><td><span class="badge-green">🟢 Verde</span></td><td><code>#22C55E</code></td><td>El agente está libre y puede atender chats</td></tr>
+  <tr><td>Atendiendo</td><td><span class="dot dot-red"></span> Rojo</td><td><span class="badge-red">🔴 Rojo</span></td><td><code>#EF4444</code></td><td>El agente está en una conversación activa</td></tr>
+  <tr><td>Pausado</td><td><span class="dot dot-yellow"></span> Amarillo</td><td><span class="badge-yellow">🟡 Amarillo</span></td><td><code>#F59E0B</code></td><td>El agente se tomó un descanso</td></tr>
+  <tr><td>Desconectado</td><td><span class="dot dot-gray"></span> Gris</td><td><span class="badge-gray">⚫ Gris</span></td><td><code>#9CA3AF</code></td><td>El agente perdió conexión o cerró sesión</td></tr>
+</table>
+
+<h3>Posibles transiciones</h3>
+
+<div class="diagram">
+                    DIAGRAMA DE TRANSICIÓN DE ESTADOS
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │                    ┌──────────────┐                              │
+    │         ┌─────────►│  Disponible  │◄──────────┐                 │
+    │         │          │   (verde)    │           │                  │
+    │         │          └──────┬───────┘           │                  │
+    │         │                 │                   │                  │
+    │         │   Abre chat    │                   │   Cierra chat    │
+    │         │                 ▼                   │                  │
+    │         │          ┌──────────────┐           │                  │
+    │         │          │  Atendiendo  │───────────┘                  │
+    │         │          │   (rojo)     │                              │
+    │         │          └──────┬───────┘                              │
+    │         │                 │                                      │
+    │         │          Pausa  │                                      │
+    │         │                 ▼                                      │
+    │         │          ┌──────────────┐                              │
+    │         └──────────┤   Pausado    │                              │
+    │                    │  (amarillo)  │                              │
+    │                    └──────┬───────┘                              │
+    │                           │                                      │
+    │                    Reanudar                                      │
+    │                           │                                      │
+    │                           └─────────► Disponible                 │
+    │                                                                  │
+    │             ┌──────────────┐                                     │
+    │             │ Desconectado │◄──── Cualquier estado + timeout     │
+    │             │   (gris)     │────► Disponible (reconexión)        │
+    │             └──────────────┘                                     │
+    │                                                                  │
+    │  Nota: Pausado puede ir a Disponible (reanudar)                  │
+    │  o a Atendiendo (si reanuda y ya tenía un chat abierto)          │
+    └──────────────────────────────────────────────────────────────────┘
+</div>
+
+<!-- ============================================================ -->
+<!-- 8. ISSUES -->
+<!-- ============================================================ -->
+<h1 id="s8">8. Issues Técnicos Detectados</h1>
+
+<table>
+  <tr><th>#</th><th>Problema</th><th>Archivo</th><th>Línea</th><th>Severidad</th><th>Descripción</th></tr>
+  <tr>
+    <td>1</td>
+    <td><strong>Import roto en FloatingPanel</strong></td>
+    <td><code>floating-panel.ts</code></td>
+    <td>3</td>
+    <td><span class="badge-red">🔴 ALTA</span></td>
+    <td><code>import type { Agent, AgentStatus } from '../shared/types.js'</code> — La ruta relativa no resuelve a <code>shared/types.ts</code>. Debería ser <code>../../shared/types.js</code> o usar el alias <code>@shared</code>.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><strong>WebSocket no importado en rooms.ts</strong></td>
+    <td><code>rooms.ts</code></td>
+    <td>93</td>
+    <td><span class="badge-red">🔴 ALTA</span></td>
+    <td>Usa <code>WebSocket.OPEN</code> pero no importa <code>WebSocket</code> de ningún lado. Debe importarlo de <code>ws</code>.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><strong>GET_AGENT_NAME sin manejador</strong></td>
+    <td><code>service-worker.ts</code></td>
+    <td>—</td>
+    <td><span class="badge-yellow">🟡 MEDIA</span></td>
+    <td>El content script envía <code>GET_AGENT_NAME</code> pero el SW no lo procesa. El mensaje se pierde silenciosamente.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><strong>Tipos duplicados</strong></td>
+    <td><code>shared/types.ts</code> y <code>server/src/types.ts</code></td>
+    <td>—</td>
+    <td><span class="badge-yellow">🟡 MEDIA</span></td>
+    <td>Son copias exactas. Si se cambia uno, hay que cambiar el otro manualmente.</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><strong>HEARTBEAT no tipado en servidor</strong></td>
+    <td><code>rooms.ts</code></td>
+    <td>—</td>
+    <td><span class="badge-yellow">🟡 MEDIA</span></td>
+    <td>El cliente envía <code>HEARTBEAT</code> pero no hay un case para ese tipo. Se ignora silenciosamente.</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td><strong>isDeleteAgentMessage faltante en JS</strong></td>
+    <td><code>shared/types.js</code></td>
+    <td>—</td>
+    <td><span class="badge-yellow">🟡 MEDIA</span></td>
+    <td>La versión compilada JS no exporta <code>isDeleteAgentMessage</code> aunque existe en el TS.</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td><strong>Sin tests</strong></td>
+    <td>—</td>
+    <td>—</td>
+    <td><span class="badge-yellow">🟡 MEDIA</span></td>
+    <td>El proyecto no tiene tests unitarios ni de integración.</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td><strong>Uso de confirm() nativo</strong></td>
+    <td><code>floating-panel.ts</code></td>
+    <td>302</td>
+    <td><span class="badge-gray">🟢 BAJA</span></td>
+    <td>Usa <code>confirm()</code> del navegador para eliminar agente. Podría no funcionar en todos los contextos.</td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<!-- 9. INSTALACIÓN -->
+<!-- ============================================================ -->
+<h1 id="s9">9. Guía de Instalación</h1>
+
+<h3>Requisitos</h3>
+<ul>
+  <li>✅ Node.js 18+</li>
+  <li>✅ Google Chrome</li>
+  <li>✅ WhatsApp Web (https://web.whatsapp.com)</li>
+</ul>
+
+<h3>Paso a paso</h3>
+
+<table>
+  <tr><th>Paso</th><th>Comando/Acción</th><th>Descripción</th></tr>
+  <tr><td>1</td><td><code>git clone &lt;repo&gt;</code></td><td>Clonar el repositorio</td></tr>
+  <tr><td>2</td><td><code>npm install</code></td><td>Instalar dependencias</td></tr>
+  <tr><td>3</td><td><code>npm run build:server</code></td><td>Compilar el servidor TypeScript</td></tr>
+  <tr><td>4</td><td><code>npm run build</code></td><td>Compilar la extensión Chrome</td></tr>
+  <tr><td>5</td><td><code>npm run server</code></td><td>Iniciar el servidor WebSocket</td></tr>
+  <tr><td>6</td><td>Abrir <code>chrome://extensions</code></td><td>Activar "Modo de desarrollador"</td></tr>
+  <tr><td>7</td><td>"Cargar descomprimida"</td><td>Seleccionar la carpeta <code>dist/</code></td></tr>
+  <tr><td>8</td><td>Abrir WhatsApp Web</td><td>Hacer clic en el icono verde de la extensión</td></tr>
+</table>
+
+<h3>Modo desarrollo</h3>
+<table>
+  <tr><th>Comando</th><th>¿Qué hace?</th></tr>
+  <tr><td><code>npm run dev</code></td><td>Build en modo watch — recompila automáticamente al guardar</td></tr>
+  <tr><td><code>npm run dev:all</code></td><td>Build watch + servidor al mismo tiempo (usando concurrently)</td></tr>
+</table>
+
+<div class="footer">
+  <p><strong>WhatsApp Team Sync</strong> — Documentación Técnica v1.0.0</p>
+  <p>Generado a partir del análisis completo del código fuente.</p>
+  <p>💬 Hecho con 💚 para equipos de soporte</p>
+</div>
+
+</body>
+</html>

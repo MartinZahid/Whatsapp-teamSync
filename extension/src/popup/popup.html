@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Team Sync</title>
+</head>
+<body>
+  <div class="container">
+    <h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="currentColor"/>
+        <path d="M17.5 8.5L12.5 13.5L10.5 11.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      WhatsApp Team Sync
+    </h2>
+
+    <div id="setup-view">
+      <p class="section-title">Selecciona tu agente</p>
+
+      <div id="agent-list" class="agent-list">
+        <!-- Agent items rendered by JS -->
+      </div>
+
+      <button id="add-agent-btn" class="btn btn-add">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Añadir agente
+      </button>
+
+      <div id="add-agent-form" class="add-form hidden">
+        <input type="text" id="new-agent-input" placeholder="Nombre del nuevo agente" maxlength="30" autocomplete="off">
+        <div class="add-form-actions">
+          <button id="confirm-add-btn" class="btn btn-sm btn-primary">Añadir</button>
+          <button id="cancel-add-btn" class="btn btn-sm btn-secondary">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="divider"><span>o</span></div>
+
+      <div class="custom-name-row">
+        <input type="text" id="custom-name-input" placeholder="Escribe un nombre personalizado..." maxlength="30" autocomplete="off">
+        <button id="connect-custom-btn" class="btn btn-primary btn-sm">Conectar</button>
+      </div>
+    </div>
+
+    <div id="connected-view" class="hidden">
+      <div class="connected-header">
+        <div class="status-row">
+          <span class="status-dot" id="status-dot"></span>
+          <div>
+            <div id="display-name" class="current-name"></div>
+            <span id="status-text" class="status-label">Conectando...</span>
+          </div>
+        </div>
+        <span class="badge" id="status-badge">-</span>
+      </div>
+
+      <div class="action-buttons">
+        <button id="pause-btn" class="btn btn-pause" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+          Pausar
+        </button>
+        <button id="resume-btn" class="btn btn-resume" disabled hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Disponible
+        </button>
+      </div>
+
+      <button id="change-agent-btn" class="btn btn-change">Cambiar de agente</button>
+
+      <div id="server-status" class="server-status hidden">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>Servidor desconectado</span>
+      </div>
+    </div>
+
+    <div id="error-view" class="hidden">
+      <p>Error de conexión</p>
+      <button id="retry-btn" class="btn btn-primary">Reintentar</button>
+    </div>
+  </div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
