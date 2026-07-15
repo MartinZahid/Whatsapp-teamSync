@@ -216,12 +216,12 @@ class BackgroundManager {
   private handlePresenceUpdate(message: ServerToClientMessage & { agents: Agent[] }): void {
     if (!message.agents) return
 
-    const serverIds = new Set<string>()
+    const activeNames = new Set<string>()
 
     for (const agent of message.agents) {
-      serverIds.add(agent.id)
+      activeNames.add(agent.name)
 
-      const existing = this.agents.get(agent.id) || {
+      const existing = this.agents.get(agent.name) || {
         name: agent.name,
         status: agent.status,
         contact: agent.contact,
@@ -230,7 +230,7 @@ class BackgroundManager {
         tabId: this.currentTabId || undefined
       }
 
-      this.agents.set(agent.id, {
+      this.agents.set(agent.name, {
         ...existing,
         status: agent.status,
         contact: agent.contact,
@@ -239,14 +239,12 @@ class BackgroundManager {
       })
     }
 
-    // Remove agents no longer tracked by server (prevents ghost accumulation)
-    for (const [id] of this.agents) {
-      if (!serverIds.has(id)) {
-        this.agents.delete(id)
+    for (const [name] of this.agents) {
+      if (!activeNames.has(name)) {
+        this.agents.delete(name)
       }
     }
 
-    // Broadcast to content scripts
     const agentsArray: Agent[] = Array.from(this.agents.values()).map(a => ({
       id: a.name,
       name: a.name,
