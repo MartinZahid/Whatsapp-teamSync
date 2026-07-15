@@ -232,10 +232,12 @@ class BackgroundManager {
         tabId: this.currentTabId || undefined
       }
 
-      let chatStartTime = existing.chatStartTime
       const contact = agent.contact || existing.contact || null
-      if (agent.status === 'active' && contact && !chatStartTime) {
-        chatStartTime = now
+      let chatStartTime = existing.chatStartTime
+      if (agent.status === 'active' && contact) {
+        if (!chatStartTime || contact !== existing.contact) {
+          chatStartTime = now
+        }
       } else if (agent.status !== 'active') {
         chatStartTime = undefined
       }
@@ -452,12 +454,14 @@ class BackgroundManager {
     const agent = this.agents.get(name)
     const now = Date.now()
     const newStatus = updates.status ?? agent?.status
-    const newContact = updates.contact ?? agent?.contact
+    const newContact = 'contact' in updates ? updates.contact : (agent?.contact ?? null)
 
     let chatStartTime = agent?.chatStartTime
-    if (newStatus === 'active' && newContact && !chatStartTime) {
-      chatStartTime = now
-    } else if (newStatus !== 'active' || !newContact) {
+    if (newStatus === 'active' && newContact) {
+      if (!chatStartTime || newContact !== agent?.contact) {
+        chatStartTime = now
+      }
+    } else if (newStatus !== 'active') {
       chatStartTime = undefined
     }
 
@@ -467,7 +471,7 @@ class BackgroundManager {
       this.agents.set(name, {
         name,
         status: updates.status || 'available',
-        contact: updates.contact || null,
+        contact: newContact,
         color: getStatusColor(updates.status || 'available'),
         chatStartTime,
         lastSeen: now,
