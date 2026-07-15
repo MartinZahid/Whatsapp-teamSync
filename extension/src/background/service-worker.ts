@@ -413,12 +413,18 @@ class BackgroundManager {
     if (!agentName) return
 
     const agent = this.agents.get(agentName)
-    if (agent && agent.status !== 'paused' && contact) {
+    if (!agent) {
+      this.updateAgentState(agentName, { status: contact ? 'active' : 'available', contact })
+      this.broadcastToContent({
+        type: 'PRESENCE_UPDATE',
+        agents: this.getAllAgents()
+      })
+    } else if (agent.status !== 'paused' && contact) {
       this.updateAndBroadcast(
         { status: 'active', contact },
         { type: 'ATTENDING', agent: agentName, contact, status: 'active' }
       )
-    } else if (agent && agent.status !== 'paused' && !contact) {
+    } else if (agent.status !== 'paused' && !contact) {
       this.updateAndBroadcast(
         { status: 'available', contact: null },
         { type: 'AVAILABLE', agent: agentName }
