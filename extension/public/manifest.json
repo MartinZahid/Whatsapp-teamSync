@@ -25,7 +25,6 @@
     {
       "matches": ["https://web.whatsapp.com/*"],
       "js": ["content/index.js"],
-      "css": ["content/styles.css"],
       "run_at": "document_idle",
       "all_frames": false
     }

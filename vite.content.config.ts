@@ -33,34 +33,23 @@ function copyHtmlEntryFiles() {
   }
 }
 
-function copyCssToFolders() {
-  if (existsSync('dist/styles/popup.css')) {
-    copyFileSync('dist/styles/popup.css', 'dist/popup/popup.css')
-  }
-  if (existsSync('dist/styles/options.css')) {
-    copyFileSync('dist/styles/options.css', 'dist/options/options.css')
-  }
-}
-
 export default defineConfig({
   build: {
     outDir: 'dist',
-    emptyOutDir: true,
+    emptyOutDir: false,
     minify: false,
     sourcemap: true,
     rollupOptions: {
       input: {
-        'background/service-worker': 'extension/src/background/service-worker.ts',
-        'popup/popup': 'extension/src/popup/popup.ts',
-        'options/options': 'extension/src/options/options.ts'
+        'content/index': 'extension/src/content/index.ts'
       },
       output: {
         entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
+        format: 'iife',
         assetFileNames: (assetInfo) => {
           const name = assetInfo.name
           if (name.endsWith('.css')) {
-            return 'styles/[name].css'
+            return 'content/styles.css'
           }
           if (name.endsWith('.map')) return 'maps/[name][extname]'
           return '[name][extname]'
@@ -76,11 +65,10 @@ export default defineConfig({
   },
   plugins: [
     {
-      name: 'copy-public-assets',
+      name: 'copy-content-assets',
       closeBundle() {
         copyDir('extension/public', 'dist')
         copyHtmlEntryFiles()
-        copyCssToFolders()
       }
     }
   ]

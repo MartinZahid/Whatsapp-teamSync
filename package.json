@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch --mode development",
-    "build": "vite build --mode production",
+    "build": "npm run build:main && npm run build:content",
+    "build:main": "vite build --mode production",
+    "build:content": "vite build --config vite.content.config.ts --mode production",
     "server": "node server/dist/server/src/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "postinstall": "npm run build:server",
