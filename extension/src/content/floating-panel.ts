@@ -20,6 +20,7 @@ export class FloatingPanel {
   private pauseBtn: HTMLButtonElement | null = null
   private resumeBtn: HTMLButtonElement | null = null
   private isPaused = false
+  private timerInterval: number | null = null
 
   constructor() {
     this.init()
@@ -216,6 +217,15 @@ export class FloatingPanel {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .wts-agent-timer {
+        font-size: 10px;
+        font-weight: 400;
+        color: var(--wts-text-muted);
+        flex-shrink: 0;
       }
 
       .wts-agent.current-user .wts-agent-name::after {
@@ -541,13 +551,20 @@ export class FloatingPanel {
           ? `<span class="wts-agent-contact available">Disponible</span>`
           : ''
 
+      const timerHtml = agent.status === 'active' && agent.contact && agent.chatStartTime
+        ? `<span class="wts-agent-timer" data-start="${agent.chatStartTime}">${this.formatElapsed(agent.chatStartTime)}</span>`
+        : ''
+
       return `
         <div class="wts-agent ${isCurrentUser ? 'current-user' : ''}" data-agent="${agent.name}">
           <div class="wts-agent-avatar" style="background: ${agent.color || getStatusColor(agent.status)}">
             ${agent.name.charAt(0).toUpperCase()}
           </div>
           <div class="wts-agent-info">
-            <div class="wts-agent-name">${this.escapeHtml(agent.name)}</div>
+            <div class="wts-agent-name">
+              <span>${this.escapeHtml(agent.name)}</span>
+              ${timerHtml}
+            </div>
             <div class="wts-agent-status">
               <span class="wts-status-dot ${statusClass}"></span>
               <span>${getStatusLabel(agent.status)}</span>
@@ -576,6 +593,7 @@ export class FloatingPanel {
     })
 
     this.updateBadgeCount(agents.filter(a => a.status !== 'offline').length)
+    this.startTimer()
   }
 
   updateCurrentUserStatus(status: AgentStatus): void {
@@ -645,7 +663,36 @@ export class FloatingPanel {
     }
   }
 
-  private escapeHtml(text: string): string {
+  private formatElapsed(startTime: number): string {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000)
+    const mins = Math.floor(elapsed / 60)
+    const secs = elapsed % 60
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+
+  private startTimer(): void {
+    if (this.timerInterval) return
+    this.timerInterval = setInterval(() => {
+      const timers = this.shadowRoot?.querySelectorAll('.wts-agent-timer')
+      if (!timers || timers.length === 0) {
+        this.stopTimer()
+        return
+      }
+      timers.forEach(el => {
+        const start = parseInt((el as HTMLElement).dataset.start || '0')
+        el.textContent = this.formatElapsed(start)
+      })
+    }, 1000)
+  }
+
+  private stopTimer(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval)
+      this.timerInterval = null
+    }
+  }
+
+  private escapeHtml(text: string): void {
     const div = document.createElement('div')
     div.textContent = text
     return div.innerHTML

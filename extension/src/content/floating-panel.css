@@ -161,6 +161,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wts-agent-timer {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--wts-text-muted);
+  flex-shrink: 0;
 }
 
 .wts-agent.current-user .wts-agent-name::after {

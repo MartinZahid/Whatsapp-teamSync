@@ -9,6 +9,7 @@ export interface Agent {
   contact: string | null
   color: string
   lastSeen: number
+  chatStartTime?: number
 }
 
 export interface PresenceUpdate {

@@ -14,6 +14,7 @@ interface AgentState {
   contact: string | null
   color: string
   lastSeen: number
+  chatStartTime?: number
   tabId?: number
 }
 
@@ -217,6 +218,7 @@ class BackgroundManager {
     if (!message.agents) return
 
     const activeNames = new Set<string>()
+    const now = Date.now()
 
     for (const agent of message.agents) {
       activeNames.add(agent.name)
@@ -230,11 +232,19 @@ class BackgroundManager {
         tabId: this.currentTabId || undefined
       }
 
+      let chatStartTime = existing.chatStartTime
+      if (agent.status === 'active' && agent.contact && !chatStartTime) {
+        chatStartTime = now
+      } else if (agent.status !== 'active' || !agent.contact) {
+        chatStartTime = undefined
+      }
+
       this.agents.set(agent.name, {
         ...existing,
         status: agent.status,
         contact: agent.contact,
         color: agent.color,
+        chatStartTime,
         lastSeen: agent.lastSeen
       })
     }
@@ -433,15 +443,27 @@ class BackgroundManager {
 
   private updateAgentState(name: string, updates: Partial<AgentState>): void {
     const agent = this.agents.get(name)
+    const now = Date.now()
+    const newStatus = updates.status ?? agent?.status
+    const newContact = updates.contact ?? agent?.contact
+
+    let chatStartTime = agent?.chatStartTime
+    if (newStatus === 'active' && newContact && !chatStartTime) {
+      chatStartTime = now
+    } else if (newStatus !== 'active' || !newContact) {
+      chatStartTime = undefined
+    }
+
     if (agent) {
-      this.agents.set(name, { ...agent, ...updates, lastSeen: Date.now() })
+      this.agents.set(name, { ...agent, ...updates, chatStartTime, lastSeen: now })
     } else {
       this.agents.set(name, {
         name,
         status: updates.status || 'available',
         contact: updates.contact || null,
         color: getStatusColor(updates.status || 'available'),
-        lastSeen: Date.now(),
+        chatStartTime,
+        lastSeen: now,
         tabId: this.currentTabId || undefined
       })
     }
@@ -454,7 +476,8 @@ class BackgroundManager {
       status: a.status,
       contact: a.contact,
       color: a.color,
-      lastSeen: a.lastSeen
+      lastSeen: a.lastSeen,
+      chatStartTime: a.chatStartTime
     } as Agent))
   }
 
