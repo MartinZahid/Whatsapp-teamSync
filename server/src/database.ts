@@ -4,7 +4,7 @@ import initSqlJs, { Database as SqlJsDatabase } from 'sql.js'
 
 let db: SqlJsDatabase | null = null
 
-export async function initDatabase(dbPath?: string): Promise<void> {
+export async function initDatabase(): Promise<void> {
   const SQL = await initSqlJs()
   db = new SQL.Database()
 
@@ -17,12 +17,21 @@ export async function initDatabase(dbPath?: string): Promise<void> {
       detail TEXT
     )
   `)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)`)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_events_agent ON events(agent)`)
+
   db.run(`
-    CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)
+    CREATE TABLE IF NOT EXISTS chat_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      agent TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      start_time INTEGER NOT NULL,
+      end_time INTEGER,
+      duration_seconds INTEGER
+    )
   `)
-  db.run(`
-    CREATE INDEX IF NOT EXISTS idx_events_agent ON events(agent)
-  `)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_agent ON chat_sessions(agent)`)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_start ON chat_sessions(start_time)`)
 
   console.log('[DB] SQLite database initialized (in-memory)')
 }
@@ -54,32 +63,73 @@ export function insertEvent(agent: string, type: EventType, detail?: string): vo
   }
 }
 
-export interface EventRow {
-  id: number
-  timestamp: number
-  agent: string
-  type: EventType
-  detail: string | null
+// --- Chat sessions ---
+
+export function startChatSession(agent: string, contact: string): void {
+  try {
+    const d = getDb()
+    const stmt = d.prepare('INSERT INTO chat_sessions (agent, contact, start_time) VALUES (?, ?, ?)')
+    stmt.run([agent, contact, Date.now()])
+    stmt.free()
+    insertEvent(agent, 'chat_start', contact)
+  } catch (err) {
+    console.error('[DB] Error starting chat session:', err)
+  }
 }
 
-export function queryEvents(from: number, to: number): EventRow[] {
+export function endChatSession(agent: string): void {
+  try {
+    const d = getDb()
+    const now = Date.now()
+    // Find the latest open session for this agent
+    const stmt = d.prepare('SELECT id, start_time, contact FROM chat_sessions WHERE agent = ? AND end_time IS NULL ORDER BY start_time DESC LIMIT 1')
+    stmt.bind([agent])
+    let session: { id: number; start_time: number; contact: string } | null = null
+    if (stmt.step()) {
+      session = stmt.getAsObject() as { id: number; start_time: number; contact: string }
+    }
+    stmt.free()
+
+    if (session) {
+      const duration = Math.round((now - session.start_time) / 1000)
+      const update = d.prepare('UPDATE chat_sessions SET end_time = ?, duration_seconds = ? WHERE id = ?')
+      update.run([now, duration, session.id])
+      update.free()
+      insertEvent(agent, 'chat_end', `${session.contact}|${duration}s`)
+    }
+  } catch (err) {
+    console.error('[DB] Error ending chat session:', err)
+  }
+}
+
+export interface ChatSessionRow {
+  id: number
+  agent: string
+  contact: string
+  start_time: number
+  end_time: number | null
+  duration_seconds: number | null
+}
+
+export function querySessions(days: number): ChatSessionRow[] {
   const d = getDb()
-  const stmt = d.prepare('SELECT * FROM events WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC')
-  stmt.bind([from, to])
-  const rows: EventRow[] = []
+  const cutoff = Date.now() - days * 86400000
+  const stmt = d.prepare('SELECT * FROM chat_sessions WHERE start_time >= ? ORDER BY start_time DESC')
+  stmt.bind([cutoff])
+  const rows: ChatSessionRow[] = []
   while (stmt.step()) {
-    rows.push(stmt.getAsObject() as unknown as EventRow)
+    rows.push(stmt.getAsObject() as unknown as ChatSessionRow)
   }
   stmt.free()
   return rows
 }
 
+// --- Metrics queries ---
+
 export interface AgentDailyStats {
   date: string
   agent: string
   chats: number
-  total_seconds: number
-  avg_seconds: number
   helps: number
 }
 
@@ -88,12 +138,11 @@ export function queryDailyStats(days: number): AgentDailyStats[] {
   const cutoff = Date.now() - days * 86400000
   const sql = `
     SELECT
-      date(timestamp / 1000, 'unixepoch') as date,
+      date(start_time / 1000, 'unixepoch', 'localtime') as date,
       agent,
-      SUM(CASE WHEN type = 'chat_start' THEN 1 ELSE 0 END) as chats,
-      SUM(CASE WHEN type = 'help_request' THEN 1 ELSE 0 END) as helps
-    FROM events
-    WHERE timestamp >= ?
+      COUNT(*) as chats
+    FROM chat_sessions
+    WHERE start_time >= ?
     GROUP BY date, agent
     ORDER BY date DESC, chats DESC
   `
@@ -117,10 +166,10 @@ export function queryPeakHours(days: number): HourlyBuckets[] {
   const cutoff = Date.now() - days * 86400000
   const sql = `
     SELECT
-      CAST(strftime('%H', timestamp / 1000, 'unixepoch') AS INTEGER) as hour,
+      CAST(strftime('%H', start_time / 1000, 'unixepoch', 'localtime') AS INTEGER) as hour,
       COUNT(*) as count
-    FROM events
-    WHERE timestamp >= ? AND type IN ('chat_start', 'help_request')
+    FROM chat_sessions
+    WHERE start_time >= ?
     GROUP BY hour
     ORDER BY count DESC
   `
@@ -146,9 +195,10 @@ export function queryTopAgents(days: number): TopAgent[] {
   const sql = `
     SELECT
       agent,
-      SUM(CASE WHEN type = 'chat_start' THEN 1 ELSE 0 END) as chats
-    FROM events
-    WHERE timestamp >= ?
+      COUNT(*) as chats,
+      COALESCE(SUM(duration_seconds), 0) as total_seconds
+    FROM chat_sessions
+    WHERE start_time >= ?
     GROUP BY agent
     ORDER BY chats DESC
     LIMIT 10
@@ -163,18 +213,12 @@ export function queryTopAgents(days: number): TopAgent[] {
   return rows
 }
 
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = Math.round(seconds % 60)
-  return `${m}m ${s}s`
-}
-
 export function exportJSON(): string {
   const d = getDb()
-  const stmt = d.prepare('SELECT * FROM events ORDER BY timestamp')
-  const rows: EventRow[] = []
+  const stmt = d.prepare('SELECT * FROM chat_sessions ORDER BY start_time')
+  const rows: ChatSessionRow[] = []
   while (stmt.step()) {
-    rows.push(stmt.getAsObject() as unknown as EventRow)
+    rows.push(stmt.getAsObject() as unknown as ChatSessionRow)
   }
   stmt.free()
   return JSON.stringify(rows, null, 2)

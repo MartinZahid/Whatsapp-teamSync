@@ -2,7 +2,7 @@
 
 import { WebSocket } from 'ws'
 import { Agent, AgentStatus, WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, isDeleteAgentMessage, isHeartbeatMessage, isHelpRequestMessage, STATUS_COLORS, PresenceUpdate } from './types.js'
-import { insertEvent } from './database.js'
+import { insertEvent, startChatSession, endChatSession } from './database.js'
 
 interface ClientConnection {
   ws: import('ws').WebSocket
@@ -42,6 +42,7 @@ export class RoomManager {
       }
 
       // Reuse existing agent
+      if (existingAgent.status === 'active') endChatSession(existingAgent.name)
       existingAgent.status = 'available'
       existingAgent.contact = null
       existingAgent.color = STATUS_COLORS.available
@@ -106,13 +107,20 @@ export class RoomManager {
     agent.lastSeen = now
 
     if (isAttendingMessage(message)) {
+      // End previous session if switching contacts
+      if (agent.status === 'active' && agent.contact && agent.contact !== message.contact) {
+        endChatSession(agent.name)
+      } else if (agent.status !== 'active') {
+        // If becoming active from non-active, no previous session to end
+      }
       agent.status = 'active'
       agent.contact = message.contact
       agent.color = STATUS_COLORS.active
       agent.helpRequested = undefined
-      insertEvent(agent.name, 'chat_start', message.contact)
+      startChatSession(agent.name, message.contact)
       console.log(`[Server] ${agent.name} attending to: ${message.contact}`)
     } else if (isPausedMessage(message)) {
+      if (agent.status === 'active') endChatSession(agent.name)
       agent.status = 'paused'
       agent.contact = null
       agent.color = STATUS_COLORS.paused
@@ -120,6 +128,7 @@ export class RoomManager {
       insertEvent(agent.name, 'paused', message.reason)
       console.log(`[Server] ${agent.name} paused: ${message.reason || 'Sin razón'}`)
     } else if (isAvailableMessage(message)) {
+      if (agent.status === 'active') endChatSession(agent.name)
       agent.status = 'available'
       agent.contact = null
       agent.color = STATUS_COLORS.available
@@ -127,6 +136,7 @@ export class RoomManager {
       insertEvent(agent.name, 'resumed')
       console.log(`[Server] ${agent.name} available`)
     } else if (isOfflineMessage(message)) {
+      if (agent.status === 'active') endChatSession(agent.name)
       agent.status = 'offline'
       agent.contact = null
       agent.color = STATUS_COLORS.offline
@@ -165,6 +175,7 @@ export class RoomManager {
     const agent = this.agents.get(agentId)
     if (agent) {
       console.log(`[Server] Agent disconnected: ${agent.name}`)
+      if (agent.status === 'active') endChatSession(agent.name)
       agent.status = 'offline'
       agent.color = STATUS_COLORS.offline
       agent.lastSeen = Date.now()
