@@ -15,6 +15,7 @@ interface AgentState {
   color: string
   lastSeen: number
   chatStartTime?: number
+  helpRequested?: boolean
   tabId?: number
 }
 
@@ -32,6 +33,7 @@ type RuntimeMessage =
   | { type: 'POPUP_READY'; agentName: string }
   | { type: 'GET_CONNECTION_STATUS' }
   | { type: 'DELETE_AGENT'; agentName: string }
+  | { type: 'HELP_REQUEST'; requesting: boolean }
 
 type ContentMessage =
   | { type: 'PRESENCE_UPDATE'; agents: Agent[] }
@@ -233,6 +235,7 @@ class BackgroundManager {
       }
 
       const contact = agent.contact || existing.contact || null
+      const helpRequested = agent.helpRequested ?? existing.helpRequested
       let chatStartTime = existing.chatStartTime
       if (agent.status === 'active' && contact) {
         if (!chatStartTime || contact !== existing.contact) {
@@ -248,6 +251,7 @@ class BackgroundManager {
         contact,
         color: agent.color,
         chatStartTime,
+        helpRequested,
         lastSeen: agent.lastSeen
       })
     }
@@ -264,7 +268,9 @@ class BackgroundManager {
       status: a.status,
       contact: a.contact,
       color: a.color,
-      lastSeen: a.lastSeen
+      lastSeen: a.lastSeen,
+      chatStartTime: a.chatStartTime,
+      helpRequested: a.helpRequested
     }))
 
     this.broadcastToContent({
@@ -347,6 +353,11 @@ class BackgroundManager {
 
       case 'DELETE_AGENT':
         this.handleDeleteAgent(message.agentName)
+        sendResponse({ success: true })
+        break
+
+      case 'HELP_REQUEST':
+        this.handleHelpRequest(message.requesting)
         sendResponse({ success: true })
         break
     }
@@ -446,6 +457,18 @@ class BackgroundManager {
     }
   }
 
+  private handleHelpRequest(requesting: boolean): void {
+    const agentName = this.config?.agentName
+    if (!agentName) return
+
+    this.updateAgentState(agentName, { helpRequested: requesting })
+    this.send({ type: 'HELP_REQUEST', agent: agentName, requesting })
+    this.broadcastToContent({
+      type: 'PRESENCE_UPDATE',
+      agents: this.getAllAgents()
+    })
+  }
+
   private handleServerUrlUpdate(url: string): void {
     if (this.config) {
       this.config.serverUrl = url
@@ -459,7 +482,7 @@ class BackgroundManager {
     const agent = this.agents.get(name)
     const now = Date.now()
     const newStatus = updates.status ?? agent?.status
-    const newContact = 'contact' in updates ? updates.contact : (agent?.contact ?? null)
+    const newContact: string | null = 'contact' in updates ? (updates.contact ?? null) : (agent?.contact ?? null)
 
     let chatStartTime = agent?.chatStartTime
     if (newStatus === 'active' && newContact) {
@@ -493,7 +516,8 @@ class BackgroundManager {
       contact: a.contact,
       color: a.color,
       lastSeen: a.lastSeen,
-      chatStartTime: a.chatStartTime
+      chatStartTime: a.chatStartTime,
+      helpRequested: a.helpRequested
     } as Agent))
   }
 

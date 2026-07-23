@@ -10,6 +10,7 @@ export interface Agent {
   color: string
   lastSeen: number
   chatStartTime?: number
+  helpRequested?: boolean
 }
 
 export interface PresenceUpdate {
@@ -50,7 +51,13 @@ export interface HeartbeatMessage {
   agent: string
 }
 
-export type ClientToServerMessage = AttendingMessage | PausedMessage | AvailableMessage | OfflineMessage | DeleteAgentMessage | HeartbeatMessage
+export interface HelpRequestMessage {
+  type: 'HELP_REQUEST'
+  agent: string
+  requesting: boolean
+}
+
+export type ClientToServerMessage = AttendingMessage | PausedMessage | AvailableMessage | OfflineMessage | DeleteAgentMessage | HeartbeatMessage | HelpRequestMessage
 
 export interface ServerInfoMessage {
   type: 'SERVER_INFO'
@@ -97,6 +104,10 @@ export function isDeleteAgentMessage(msg: WSMessage): msg is DeleteAgentMessage 
 
 export function isHeartbeatMessage(msg: WSMessage): msg is HeartbeatMessage {
   return msg.type === 'HEARTBEAT'
+}
+
+export function isHelpRequestMessage(msg: WSMessage): msg is HelpRequestMessage {
+  return msg.type === 'HELP_REQUEST'
 }
 
 export function isPresenceUpdate(msg: WSMessage): msg is PresenceUpdate {

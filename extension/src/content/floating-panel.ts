@@ -20,7 +20,10 @@ export class FloatingPanel {
   private serverConnected = false
   private pauseBtn: HTMLButtonElement | null = null
   private resumeBtn: HTMLButtonElement | null = null
+  private helpBtn: HTMLButtonElement | null = null
+  private cancelHelpBtn: HTMLButtonElement | null = null
   private isPaused = false
+  private isHelpRequested = false
   private timerInterval: number | null = null
   private localChatTimes: Map<string, number> = new Map()
   private chatContacts: Map<string, string | null> = new Map()
@@ -80,6 +83,21 @@ export class FloatingPanel {
           <div class="wts-empty">Cargando agentes...</div>
         </div>
         <div class="wts-actions" id="wts-actions">
+          <button class="wts-help-btn" id="wts-help-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            Pedir ayuda
+          </button>
+          <button class="wts-help-btn wts-cancel-help-btn hidden" id="wts-cancel-help-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Cancelar ayuda
+          </button>
           <button class="wts-pause-btn" id="wts-pause-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16"/>
@@ -117,6 +135,8 @@ export class FloatingPanel {
     this.collapsedBadge = this.shadowRoot.getElementById('wts-collapsed-badge') as HTMLElement
     this.pauseBtn = this.shadowRoot.getElementById('wts-pause-btn') as HTMLButtonElement
     this.resumeBtn = this.shadowRoot.getElementById('wts-resume-btn') as HTMLButtonElement
+    this.helpBtn = this.shadowRoot.getElementById('wts-help-btn') as HTMLButtonElement
+    this.cancelHelpBtn = this.shadowRoot.getElementById('wts-cancel-help-btn') as HTMLButtonElement
   }
 
   private bindEvents(): void {
@@ -135,6 +155,20 @@ export class FloatingPanel {
       this.resumeBtn?.classList.add('hidden')
       this.pauseBtn?.classList.remove('hidden')
       chrome.runtime.sendMessage({ type: 'RESUMED' })
+    })
+
+    this.helpBtn?.addEventListener('click', () => {
+      this.isHelpRequested = true
+      this.helpBtn?.classList.add('hidden')
+      this.cancelHelpBtn?.classList.remove('hidden')
+      chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: true })
+    })
+
+    this.cancelHelpBtn?.addEventListener('click', () => {
+      this.isHelpRequested = false
+      this.cancelHelpBtn?.classList.add('hidden')
+      this.helpBtn?.classList.remove('hidden')
+      chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: false })
     })
 
     // Keyboard support
@@ -248,8 +282,9 @@ export class FloatingPanel {
         ? `<span class="wts-agent-timer" data-start="${chatStartTime}">${this.formatElapsed(chatStartTime)}</span>`
         : ''
 
+      const helpClass = agent.helpRequested ? ' help-requested' : ''
       return `
-        <div class="wts-agent ${isCurrentUser ? 'current-user' : ''}" data-agent="${agent.name}">
+        <div class="wts-agent ${isCurrentUser ? 'current-user' : ''}${helpClass}" data-agent="${agent.name}">
           <div class="wts-agent-avatar" style="background: ${agent.color || getStatusColor(agent.status)}">
             ${agent.name.charAt(0).toUpperCase()}
           </div>
@@ -285,7 +320,21 @@ export class FloatingPanel {
       })
     })
 
+    // Sync help button state for current user
+    const currentAgent = agents.find(a => a.name === currentAgentName)
+    if (currentAgent) {
+      this.isHelpRequested = currentAgent.helpRequested === true
+      if (this.isHelpRequested) {
+        this.helpBtn?.classList.add('hidden')
+        this.cancelHelpBtn?.classList.remove('hidden')
+      } else {
+        this.cancelHelpBtn?.classList.add('hidden')
+        this.helpBtn?.classList.remove('hidden')
+      }
+    }
+
     this.updateBadgeCount(agents.filter(a => a.status !== 'offline').length)
+    this.updateBadgeAlert(agents.some(a => a.helpRequested))
     this.startTimer()
   }
 
@@ -356,6 +405,13 @@ export class FloatingPanel {
     }
   }
 
+  private updateBadgeAlert(hasAlert: boolean): void {
+    const badge = this.shadowRoot?.getElementById('wts-collapsed-badge')
+    if (badge) {
+      badge.classList.toggle('help-active', hasAlert)
+    }
+  }
+
   private formatElapsed(startTime: number): string {
     const elapsed = Math.floor((Date.now() - startTime) / 1000)
     const mins = Math.floor(elapsed / 60)
@@ -385,7 +441,7 @@ export class FloatingPanel {
     }
   }
 
-  private escapeHtml(text: string): void {
+  private escapeHtml(text: string): string {
     const div = document.createElement('div')
     div.textContent = text
     return div.innerHTML

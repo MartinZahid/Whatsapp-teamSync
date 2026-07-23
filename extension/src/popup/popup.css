@@ -96,6 +96,12 @@ h2 svg { width: 18px; height: 18px; }
 }
 .btn-add:hover { background: var(--primary-light); border-color: var(--primary); }
 
+.btn-help { flex: 1; background: var(--bg-hover); color: var(--danger); border: 1px solid var(--border); }
+.btn-help:hover:not(:disabled) { background: #FEF2F2; }
+
+.btn-cancel-help { flex: 1; background: #FEE2E2; color: #991B1B; border: 1px solid var(--danger); }
+.btn-cancel-help:hover:not(:disabled) { background: #FECACA; }
+
 .btn-pause { flex: 1; background: var(--bg-hover); color: var(--warning); border: 1px solid var(--border); }
 .btn-pause:hover:not(:disabled) { background: #FEF3C7; }
 
@@ -146,6 +152,7 @@ h2 svg { width: 18px; height: 18px; }
 .badge-available { background: #FED7AA; color: #9A3412; }
 .badge-paused { background: #FEF3C7; color: #92400E; }
 .badge-attending { background: #FEE2E2; color: #991B1B; }
+.badge-help { background: #FEE2E2; color: #DC2626; }
 .badge-offline { background: #F3F4F6; color: var(--text-muted); }
 
 .action-buttons { display: flex; gap: 6px; }

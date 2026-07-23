@@ -112,8 +112,17 @@
 
 .wts-agent.current-user { background: #F0FDF4; }
 
+.wts-agent.help-requested {
+  background: #FEF2F2;
+  border-left: 3px solid #EF4444;
+}
+
 @media (prefers-color-scheme: dark) {
   .wts-agent.current-user { background: #14532D; }
+  .wts-agent.help-requested {
+    background: #7F1D1D;
+    border-left-color: #EF4444;
+  }
 }
 
 .wts-delete-btn {
@@ -225,6 +234,31 @@
   gap: 6px;
   border-top: 1px solid var(--wts-border);
 }
+.wts-help-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--wts-border);
+  border-radius: 6px;
+  background: transparent;
+  color: #EF4444;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wts-help-btn:hover { background: #FEF2F2; }
+.wts-help-btn svg { width: 14px; height: 14px; }
+.wts-cancel-help-btn {
+  color: #991B1B;
+  border-color: #EF4444;
+  background: #FEE2E2;
+}
+.wts-cancel-help-btn:hover { background: #FECACA; }
 .wts-pause-btn {
   flex: 1;
   display: inline-flex;
@@ -301,6 +335,16 @@
 }
 
 .wts-collapsed-badge:hover { opacity: 0.9; }
+
+.wts-collapsed-badge.help-active {
+  background: #DC2626;
+  animation: wts-badge-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes wts-badge-pulse {
+  0%, 100% { box-shadow: var(--wts-shadow); }
+  50% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5), var(--wts-shadow); }
+}
 
 .wts-collapsed-badge svg { width: 18px; height: 18px; }
 

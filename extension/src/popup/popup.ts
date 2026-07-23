@@ -13,6 +13,7 @@ const qs = <T extends HTMLElement>(sel: string, parent?: HTMLElement) => (parent
 let currentConfig: AgentConfig | null = null
 let agentList: string[] = []
 let isPaused = false
+let isHelpRequested = false
 
 // --- Storage ---
 async function loadConfig(): Promise<AgentConfig | null> {
@@ -46,7 +47,7 @@ function updateBadge(status: string) {
   const badge = $('status-badge')
   badge.textContent = status
   badge.className = 'badge'
-  const cls: Record<string,string> = { 'Disponible':'badge-available', 'Pausado':'badge-paused', 'Atendiendo':'badge-attending' }
+  const cls: Record<string,string> = { 'Disponible':'badge-available', 'Pausado':'badge-paused', 'Atendiendo':'badge-attending', 'Ayuda':'badge-help' }
   badge.classList.add(cls[status] || 'badge-offline')
 }
 
@@ -150,13 +151,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus(msg.connected)
         setServerWarning(!msg.connected)
         if (msg.connected) {
-          updateBadge(isPaused ? 'Pausado' : 'Disponible')
+          const badgeText = isHelpRequested ? 'Ayuda' : (isPaused ? 'Pausado' : 'Disponible')
+          updateBadge(badgeText)
           ;($('pause-btn') as HTMLButtonElement).disabled = false
           ;($('resume-btn') as HTMLButtonElement).disabled = !isPaused
+          ;($('help-btn') as HTMLButtonElement).disabled = false
+          ;($('cancel-help-btn') as HTMLButtonElement).disabled = !isHelpRequested
         } else {
           updateBadge('Desconectado')
           ;($('pause-btn') as HTMLButtonElement).disabled = true
           ;($('resume-btn') as HTMLButtonElement).disabled = true
+          ;($('help-btn') as HTMLButtonElement).disabled = true
+          ;($('cancel-help-btn') as HTMLButtonElement).disabled = true
         }
         break
       case 'AGENT_STATUS':
@@ -168,6 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBadge('Desconectado')
         ;($('pause-btn') as HTMLButtonElement).disabled = true
         ;($('resume-btn') as HTMLButtonElement).disabled = true
+        ;($('help-btn') as HTMLButtonElement).disabled = true
+        ;($('cancel-help-btn') as HTMLButtonElement).disabled = true
         break
     }
   })
@@ -238,6 +246,26 @@ document.addEventListener('DOMContentLoaded', () => {
     ;($('resume-btn') as HTMLButtonElement).disabled = true
     updateBadge('Disponible')
     chrome.runtime.sendMessage({ type: 'RESUMED' })
+  })
+
+  $('help-btn').addEventListener('click', () => {
+    isHelpRequested = true
+    ;($('help-btn') as HTMLButtonElement).hidden = true
+    ;($('help-btn') as HTMLButtonElement).disabled = true
+    ;($('cancel-help-btn') as HTMLButtonElement).hidden = false
+    ;($('cancel-help-btn') as HTMLButtonElement).disabled = false
+    updateBadge('Ayuda')
+    chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: true })
+  })
+
+  $('cancel-help-btn').addEventListener('click', () => {
+    isHelpRequested = false
+    ;($('cancel-help-btn') as HTMLButtonElement).hidden = true
+    ;($('cancel-help-btn') as HTMLButtonElement).disabled = true
+    ;($('help-btn') as HTMLButtonElement).hidden = false
+    ;($('help-btn') as HTMLButtonElement).disabled = false
+    updateBadge(isPaused ? 'Pausado' : 'Disponible')
+    chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: false })
   })
 
 })
