@@ -314,11 +314,12 @@
 }
 
 .wts-collapsed-badge {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 2147483647;
   background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.wts-collapsed-badge:active { cursor: grabbing; }
   color: white;
   padding: 10px 14px;
   border-radius: 50px;
