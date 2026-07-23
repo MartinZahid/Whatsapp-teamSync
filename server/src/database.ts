@@ -200,8 +200,7 @@ export function queryTopAgents(days: number): TopAgent[] {
     FROM chat_sessions
     WHERE start_time >= ?
     GROUP BY agent
-    ORDER BY chats DESC
-    LIMIT 10
+    ORDER BY total_seconds DESC
   `
   const stmt = d.prepare(sql)
   stmt.bind([cutoff])

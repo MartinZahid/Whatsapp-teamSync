@@ -197,7 +197,11 @@ process.on('SIGTERM', () => {
 })
 
 // Initialize DB then start
-initDatabase().catch(err => {
+initDatabase().then(() => {
+  httpServer.listen(PORT, () => {
+    console.log(`[Server] Dashboard: http://localhost:${PORT}`)
+  })
+}).catch(err => {
   console.error('[Server] Failed to initialize database:', err)
   process.exit(1)
 })

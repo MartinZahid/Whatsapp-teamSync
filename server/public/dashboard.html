@@ -245,35 +245,48 @@ loadLive()
 
 // --- History panel ---
 async function loadHistory() {
-  const days = document.getElementById('history-days').value
-  const sessions = await api(`/api/sessions?days=${days}`)
-  const container = document.getElementById('history-content')
-  if (!sessions || sessions.length === 0) {
-    container.innerHTML = '<div class="empty">No hay sesiones en este período</div>'
-    return
+  try {
+    const days = document.getElementById('history-days').value
+    const data = await api(`/api/metrics?days=${days}`)
+    const container = document.getElementById('history-content')
+    if (!data.daily || data.daily.length === 0) {
+      container.innerHTML = '<div class="empty">No hay datos en este período</div>'
+      return
+    }
+    // Aggregate by agent: total chats and total time
+    const agg = {}
+    data.daily.forEach(r => {
+      if (!agg[r.agent]) agg[r.agent] = { chats: 0 }
+      agg[r.agent].chats += r.chats
+    })
+    data.topAgents.forEach(r => {
+      if (!agg[r.agent]) agg[r.agent] = { chats: 0 }
+      agg[r.agent].time = r.total_seconds
+    })
+    const rows = Object.entries(agg).map(([agent, v]) => ({ agent, chats: v.chats, time: v.time || 0 }))
+    rows.sort((a, b) => b.time - a.time)
+    container.innerHTML = `
+      <table>
+        <thead><tr><th>Agente</th><th>Chats</th><th>Tiempo total</th><th>Promedio</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${escapeHtml(r.agent)}</td>
+              <td>${r.chats}</td>
+              <td>${formatDur(r.time)}</td>
+              <td>${r.chats > 0 ? formatDur(Math.round(r.time / r.chats)) : '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `
+  } catch (err) {
+    document.getElementById('history-content').innerHTML = '<div class="empty">Error al cargar: ' + err.message + '</div>'
   }
-  container.innerHTML = `
-    <table>
-      <thead><tr><th>Inicio</th><th>Agente</th><th>Contacto</th><th>Duración</th><th>Estado</th></tr></thead>
-      <tbody>
-        ${sessions.map(s => {
-          const start = new Date(s.start_time).toLocaleString('es-ES')
-          const duration = s.duration_seconds != null ? formatDur(s.duration_seconds) : 'En curso'
-          const status = s.end_time ? 'Finalizado' : 'En curso'
-          return `<tr>
-            <td>${start}</td>
-            <td>${escapeHtml(s.agent)}</td>
-            <td>${escapeHtml(s.contact)}</td>
-            <td>${duration}</td>
-            <td>${status}</td>
-          </tr>`
-        }).join('')}
-      </tbody>
-    </table>
-  `
 }
 
 function formatDur(sec) {
+  if (sec == null || isNaN(sec)) return '0s'
   const m = Math.floor(sec / 60)
   const s = sec % 60
   return m > 0 ? `${m}m ${s}s` : `${s}s`

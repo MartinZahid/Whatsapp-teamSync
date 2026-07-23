@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Team Sync — Documentación del Proyecto</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --sidebar: #151821;
+      --card: #1a1d2e;
+      --card-hover: #222740;
+      --border: #2a2d3e;
+      --text: #e4e6f0;
+      --text-muted: #8b8fa3;
+      --accent: #6c5ce7;
+      --accent-light: #a29bfe;
+      --green: #00b894;
+      --red: #e17055;
+      --yellow: #fdcb6e;
+      --blue: #74b9ff;
+      --radius: 12px;
+      --max-width: 1100px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      display: flex;
+    }
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-logo h2 { font-size: 16px; font-weight: 700; color: #fff; }
+    .sidebar-logo p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .sidebar nav a {
+      display: block;
+      padding: 8px 20px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .sidebar nav a:hover, .sidebar nav a.active {
+      color: #fff;
+      background: rgba(108,92,231,0.08);
+      border-left-color: var(--accent);
+      text-decoration: none;
+    }
+    .sidebar nav .section-label {
+      padding: 16px 20px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+    }
+    .hero {
+      padding: 60px 48px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    .hero p { font-size: 16px; color: var(--text-muted); margin-top: 12px; max-width: 640px; }
+    .hero .badges { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .content {
+      padding: 40px 48px 80px;
+      max-width: var(--max-width);
+    }
+    .content section {
+      margin-bottom: 64px;
+      scroll-margin-top: 32px;
+    }
+    .content h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .content h2 .num {
+      color: var(--accent);
+      margin-right: 8px;
+    }
+    .content h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 28px 0 12px;
+      color: var(--accent-light);
+    }
+    .content h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 20px 0 8px;
+      color: #fff;
+    }
+    .content p, .content li {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .content ul, .content ol { padding-left: 20px; }
+    .content li { margin-bottom: 4px; }
+
+    .diagram-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin: 20px 0;
+      overflow-x: auto;
+    }
+    .diagram-card .label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .diagram-card .label svg { width: 16px; height: 16px; }
+    .diagram-card .caption {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 16px;
+      font-style: italic;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .info-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .info-card:hover { border-color: var(--accent); }
+    .info-card h4 { margin: 0 0 6px; font-size: 14px; }
+    .info-card p { font-size: 13px; margin: 0; }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    .comparison-table th, .comparison-table td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .comparison-table th {
+      background: var(--card);
+      font-weight: 600;
+      color: #fff;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .comparison-table .yes { color: var(--green); font-weight: 600; }
+    .comparison-table .no { color: var(--red); }
+
+    .mermaid { display: flex; justify-content: center; }
+
+    .tech-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .tech-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .tech-item strong { display: block; font-size: 13px; color: #fff; }
+    .tech-item span { font-size: 12px; color: var(--text-muted); }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 48px;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 16px;
+      }
+      .sidebar nav { display: none; }
+      .hero { padding: 32px 20px 24px; }
+      .hero h1 { font-size: 26px; }
+      .content { padding: 24px 20px 60px; }
+      .footer { padding: 20px; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>WhatsApp Team Sync</h2>
+    <p>Documentación del proyecto</p>
+  </div>
+  <nav>
+    <div class="section-label">Introducción</div>
+    <a href="#arquitectura">1. Arquitectura general</a>
+    <a href="#flujo">2. Flujo de comunicación</a>
+    <a href="#base-datos">3. Base de datos</a>
+    <div class="section-label">Funcionalidad</div>
+    <a href="#autenticacion">4. Autenticación por PIN</a>
+    <a href="#estados">5. Ciclo de vida del agente</a>
+    <a href="#dashboard">6. Dashboard y reportes</a>
+    <div class="section-label">Diseño</div>
+    <a href="#casos-uso">7. Casos de uso</a>
+    <a href="#despliegue">8. Despliegue</a>
+    <a href="#componentes">9. Diagrama de componentes</a>
+    <div class="section-label">Resultados</div>
+    <a href="#tecnologias">Tecnologías usadas</a>
+    <a href="#comparativa">Comparativa antes/después</a>
+  </nav>
+</aside>
+
+<!-- ========== MAIN ========== -->
+<div class="main">
+
+  <div class="hero">
+    <h1>Sistema de Gestión de Presencia<br>y Coordinación de Agentes para WhatsApp Web</h1>
+    <p>Proyecto de titulación — Ingeniería en Sistemas Computacionales<br>
+    Instituto Tecnológico de Hermosillo</p>
+    <div class="badges">
+      <span class="badge">TypeScript</span>
+      <span class="badge">Node.js</span>
+      <span class="badge">WebSocket</span>
+      <span class="badge">Chrome Extension MV3</span>
+      <span class="badge">SQLite</span>
+      <span class="badge">Express</span>
+      <span class="badge">Docker</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== 1. ARQUITECTURA ===== -->
+    <section id="arquitectura">
+      <h2><span class="num">01</span> Arquitectura general del sistema</h2>
+      <p>El sistema sigue un modelo <strong>cliente-servidor</strong> con tres componentes principales. Cada agente ejecuta una extensión de Chrome que se comunica vía WebSocket con un servidor central Node.js. Un dashboard web administrativo consume la misma información a través de una API REST.</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de arquitectura</div>
+        <pre class="mermaid">
+graph TB
+    subgraph Cliente["👤 CLIENTE — Navegador Chrome"]
+        EXT["Extensión Chrome MV3
+            ─────────────────
+            Popup │ Options
+            Service Worker
+            Content Script
+            Panel flotante Shadow DOM"]
+    end
+
+    subgraph Servidor["🖥 SERVIDOR — Node.js"]
+        WS["WebSocket Server
+            ─────────────────
+            Puerto 3001
+            RoomManager
+            Presencia en tiempo real"]
+        HTTP["HTTP Express Server
+            ─────────────────
+            Puerto 3000
+            API REST
+            Dashboard web"]
+        DB[("SQLite Database
+            ─────────────────
+            agents
+            sessions
+            activity_log")]
+    end
+
+    subgraph Admin["👨‍💼 ADMINISTRADOR"]
+        DASH["Dashboard Web
+            ─────────────────
+            Estado en vivo
+            Historial de sesiones
+            Reportes y métricas"]
+    end
+
+    EXT -- "WebSocket (ws://)" --> WS
+    EXT -- "chrome.storage" --> EXT
+    WS <--> DB
+    HTTP <--> DB
+    DASH -- "HTTP REST (fetch)" --> HTTP
+    WS -- "Broadcast PRESENCE_UPDATE" --> EXT
+</pre>
+        <div class="caption">Arquitectura general del sistema: la extensión se comunica en tiempo real con el servidor WebSocket; el dashboard consulta datos históricos vía REST; SQLite persiste toda la información.</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>🟣 Extensión de Chrome</h4>
+          <p>Se inyecta dentro de WhatsApp Web. Detecta el contacto abierto, muestra un panel flotante con el estado de todos los agentes, y envía actualizaciones al servidor.</p>
+        </div>
+        <div class="info-card">
+          <h4>🟢 Servidor WebSocket + REST</h4>
+          <p>Centraliza las conexiones de todos los agentes, autentica por PIN, guarda sesiones en SQLite, y retransmite los cambios de estado a todos los clientes conectados.</p>
+        </div>
+        <div class="info-card">
+          <h4>🔵 Dashboard Administrativo</h4>
+          <p>Panel web visible en http://localhost:3000. Muestra en vivo el estado de cada agente, el historial de sesiones, y reportes gráficos de productividad.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 2. FLUJO ===== -->
+    <section id="flujo">
+      <h2><span class="num">02</span> Flujo de comunicación</h2>
+      <p>Cuando un agente abre la extensión y se conecta, se establece un canal WebSocket bidireccional. Cada cambio de estado o detección de contacto se transmite al servidor, que lo reenvía a todos los demás agentes.</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de secuencia — conexión y atención de un chat</div>
+        <pre class="mermaid">
+sequenceDiagram
+    participant E as Extensión
+    participant SR as Servidor WebSocket
+    participant DB as SQLite
+    participant O as Otros Agentes
+
+    Note over E,SR: 1. Autenticación
+    E->>+SR: ATTENDING { agent: "Ana", pin: "1234" }
+    SR->>DB: Verificar PIN en agents
+    DB-->>SR: PIN válido
+    SR-->>-E: WELCOME + SERVER_INFO
+    SR->>O: PRESENCE_UPDATE (Ana → available)
+
+    Note over E,SR: 2. Agente abre un chat
+    E->>+SR: ATTENDING { agent: "Ana", contact: "Cliente X" }
+    SR->>DB: INSERT session (start_time, contact)
+    SR-->>-O: PRESENCE_UPDATE (Ana → active, contact: "Cliente X")
+
+    Note over E,SR: 3. Heartbeat (cada 30s)
+    E->>SR: HEARTBEAT { agent: "Ana" }
+    SR->>DB: UPDATE last_seen
+    SR-->>E: (no broadcast)
+
+    Note over E,SR: 4. Agente cierra chat
+    E->>+SR: AVAILABLE { agent: "Ana" }
+    SR->>DB: UPDATE session (end_time, duration)
+    SR-->>-O: PRESENCE_UPDATE (Ana → available)
+</pre>
+        <div class="caption">Secuencia completa desde que el agente se autentica, atiende un chat, y vuelve a disponible. El servidor persiste cada evento en SQLite y notifica a los demás agentes en tiempo real.</div>
+      </div>
+
+      <h3>Protocolo de mensajes WebSocket</h3>
+      <div class="diagram-card">
+        <table class="comparison-table" style="margin:0">
+          <tr><th>Dirección</th><th>Tipo</th><th>Propósito</th></tr>
+          <tr><td>Cliente → Servidor</td><td><code>ATTENDING</code></td><td>Agente comenzó a atender un chat</td></tr>
+          <tr><td>Cliente → Servidor</td><td><code>AVAILABLE</code></td><td>Agente está libre/disponible</td></tr>
+          <tr><td>Cliente → Servidor</td><td><code>PAUSED</code></td><td>Agente pausó su disponibilidad</td></tr>
+          <tr><td>Cliente → Servidor</td><td><code>HEARTBEAT</code></td><td>Keepalive (cada 30 segundos)</td></tr>
+          <tr><td>Cliente → Servidor</td><td><code>DELETE_AGENT</code></td><td>Eliminar agente del servidor</td></tr>
+          <tr><td>Servidor → Cliente</td><td><code>WELCOME</code></td><td>Bienvenida al conectarse</td></tr>
+          <tr><td>Servidor → Cliente</td><td><code>SERVER_INFO</code></td><td>Estado inicial completo del sistema</td></tr>
+          <tr><td>Servidor → Cliente</td><td><code>PRESENCE_UPDATE</code></td><td>Cambio de estado de algún agente</td></tr>
+          <tr><td>Servidor → Cliente</td><td><code>ERROR</code></td><td>Error (autenticación, formato, etc.)</td></tr>
+        </table>
+        <div class="caption">Cada mensaje es un JSON con tipo y payload. El servidor valida, procesa, persiste y retransmite según corresponda.</div>
+      </div>
+    </section>
+
+    <!-- ===== 3. BASE DE DATOS ===== -->
+    <section id="base-datos">
+      <h2><span class="num">03</span> Base de datos — esquema relacional</h2>
+      <p>SQLite almacena toda la información de manera persistente. Cuatro tablas principales normalizadas que permiten consultar historial de sesiones, actividad por agente, y métricas de productividad.</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama entidad-relación</div>
+        <pre class="mermaid">
+erDiagram
+    agents {
+        TEXT id PK "UUID único"
+        TEXT name "Nombre del agente"
+        TEXT pin_hash "SHA-256 del PIN"
+        TEXT color "Color para el avatar"
+        INTEGER created_at "Timestamp de registro"
+        INTEGER active "1=activo, 0=eliminado"
+    }
+
+    sessions {
+        INTEGER id PK "Autoincrement"
+        TEXT agent_id FK "→ agents.id"
+        INTEGER start_time "Inicio de la atención"
+        INTEGER end_time "Fin de la atención (NULL si activa)"
+        TEXT contact "Nombre del contacto atendido"
+        TEXT status "active | available | paused"
+        INTEGER duration "Diferencia end - start (segundos)"
+    }
+
+    activity_log {
+        INTEGER id PK "Autoincrement"
+        TEXT agent_id FK "→ agents.id"
+        INTEGER timestamp "Momento del evento"
+        TEXT event_type "ATTENDING | AVAILABLE | PAUSED | OFFLINE"
+        TEXT details "JSON con información adicional"
+    }
+
+    auth_pins {
+        INTEGER id PK "Autoincrement"
+        TEXT agent_id FK "→ agents.id"
+        TEXT pin_hash "SHA-256 del PIN"
+        INTEGER created_at "Fecha de creación"
+        INTEGER expires_at "Fecha de expiración (NULL = vigente)"
+    }
+
+    agents ||--o{ sessions : tiene
+    agents ||--o{ activity_log : genera
+    agents ||--o{ auth_pins : posee
+</pre>
+        <div class="caption">Cuatro tablas: <code>agents</code> almacena los perfiles, <code>sessions</code> registra cada atención, <code>activity_log</code> guarda un historial detallado de eventos, y <code>auth_pins</code> gestiona los PINs de autenticación.</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>📋 agents</h4>
+          <p>Registro maestro de agentes. Cada agente tiene un ID único, nombre, hash de PIN, y un indicador de activo/inactivo.</p>
+        </div>
+        <div class="info-card">
+          <h4>📞 sessions</h4>
+          <p>Cada atención a un chat es una sesión. Guarda inicio, fin, contacto, duración. Permite calcular tiempo promedio de atención.</p>
+        </div>
+        <div class="info-card">
+          <h4>📝 activity_log</h4>
+          <p>Bitácora cronológica de cada cambio de estado. Usado para reconstruir la línea del tiempo de cada agente.</p>
+        </div>
+        <div class="info-card">
+          <h4>🔑 auth_pins</h4>
+          <p>Gestiona los PINs de acceso con hash SHA-256. Soporta expiración y múltiples PINs por agente (rotación).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4. AUTENTICACIÓN ===== -->
+    <section id="autenticacion">
+      <h2><span class="num">04</span> Autenticación por PIN</h2>
+      <p>Cada agente tiene un PIN único de 4-6 dígitos. Al conectarse, la extensión envía el PIN junto con el nombre del agente. El servidor valida contra el hash almacenado en SQLite antes de permitir el acceso.</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de secuencia — autenticación</div>
+        <pre class="mermaid">
+sequenceDiagram
+    participant Popup as Popup Extensión
+    participant SW as Service Worker
+    participant SR as Servidor WS
+    participant DB as SQLite
+
+    Popup->>Popup: Usuario selecciona agente\n e ingresa PIN
+    Popup->>SW: POPUP_READY { agentName, pin }
+    SW->>SW: Abre WebSocket
+    SW->>SR: ATTENDING { agent: "Ana", pin: "1234" }
+    SR->>DB: SELECT pin_hash FROM auth_pins\nJOIN agents WHERE name = "Ana"
+    DB-->>SR: pin_hash encontrado
+    SR->>SR: SHA-256("1234") == pin_hash?
+    alt PIN correcto
+        SR-->>SW: WELCOME + SERVER_INFO
+        SW-->>Popup: CONNECTION_STATUS { connected: true }
+        Popup->>Popup: Mostrar "Conectado"
+    else PIN incorrecto
+        SR-->>SW: ERROR { code: "AUTH_FAILED" }
+        SW-->>Popup: Mostrar error
+        Popup->>Popup: Solicitar PIN nuevamente
+    end
+</pre>
+        <div class="caption">El PIN nunca viaja en texto plano después del handshake inicial. El servidor lo valida contra el hash almacenado. Tres intentos fallidos bloquean temporalmente al agente.</div>
+      </div>
+    </section>
+
+    <!-- ===== 5. ESTADOS ===== -->
+    <section id="estados">
+      <h2><span class="num">05</span> Ciclo de vida del agente — máquina de estados</h2>
+      <p>Cada agente solo puede estar en un estado a la vez. Las transiciones están controladas tanto por acciones del usuario (abrir/cerrar chat, pausar) como por el sistema (timeout de heartbeat).</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de estados del agente</div>
+        <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Desconectado
+    Desconectado --> Disponible: Conectar (PIN válido)
+
+    Disponible --> Atendiendo: Abre chat\n(ATTENDING)
+    Disponible --> Pausado: Pausa manual\n(PAUSED)
+    Disponible --> Desconectado: Cierra navegador\n(OFFLINE)
+
+    Atendiendo --> Disponible: Cierra chat\n(AVAILABLE)
+    Atendiendo --> Pausado: Pausa manual\n(PAUSED)
+    Atendiendo --> Desconectado: Pérdida de conexión\n(heartbeat timeout)
+
+    Pausado --> Disponible: Reanuda\n(AVAILABLE)
+    Pausado --> Desconectado: Cierra navegador\n(OFFLINE)
+
+    Desconectado --> [*]: Eliminar agente\n(DELETE_AGENT)
+
+    note right of Atendiendo
+        El timer de atención
+        se inicia al entrar
+        a este estado
+    end note
+
+    note right of Desconectado
+        Heartbeat 30s
+        Timeout 60s → offline
+    end note
+</pre>
+        <div class="caption">El agente inicia <strong>Desconectado</strong>, pasa a <strong>Disponible</strong> al autenticarse, y transiciona entre <strong>Atendiendo</strong> y <strong>Pausado</strong> según su actividad. La pérdida de conexión o timeout lo regresa a <strong>Desconectado</strong>.</div>
+      </div>
+    </section>
+
+    <!-- ===== 6. DASHBOARD ===== -->
+    <section id="dashboard">
+      <h2><span class="num">06</span> Dashboard web y reportes</h2>
+      <p>El panel administrativo se sirve en <code>http://localhost:3000</code>. Está dividido en vistas que permiten monitorear el estado actual, consultar el historial, y visualizar métricas de productividad con gráficas.</p>
+
+      <div class="diagram-card">
+        <div class="label">Dashboard — wireframe de vistas</div>
+        <pre class="mermaid">
+graph LR
+    subgraph NAV["Navegación"]
+        DIR[("/" principal)]
+    end
+
+    subgraph V1["Vista 1 — Panel en vivo"]
+        A1[("Cards de agentes\nEstado actual ⏺️\nTiempo transcurrido ⏱️\nContacto actual 📞")]
+    end
+
+    subgraph V2["Vista 2 — Historial"]
+        A2[("Tabla de sesiones\nFecha │ Agente │ Contacto\nDuración │ Estado\nFiltros por fecha")]
+    end
+
+    subgraph V3["Vista 3 — Reportes"]
+        A3[("Gráficas\n• Tiempo promedio por agente 📊\n• Horas pico 📈\n• Top agentes 🏆\n• Sesiones por día 📅")]
+    end
+
+    subgraph V4["Vista 4 — Administración"]
+        A4[("Gestión de agentes\n• Agregar agente ➕\n• Resetear PIN 🔑\n• Eliminar agente 🗑️")]
+    end
+
+    DIR --> V1
+    DIR --> V2
+    DIR --> V3
+    DIR --> V4
+</pre>
+        <div class="caption">El dashboard tiene 4 vistas principales: panel en vivo (actualizaciones vía WebSocket), historial de sesiones (datos de SQLite), reportes gráficos (Chart.js), y gestión de agentes (CRUD).</div>
+      </div>
+
+      <h3>Métricas del módulo de reportes</h3>
+      <div class="diagram-card">
+        <table class="comparison-table" style="margin:0">
+          <tr><th>Métrica</th><th>Cálculo</th><th>Visualización</th></tr>
+          <tr><td>Tiempo promedio de atención</td><td><code>AVG(end_time - start_time)</code> de sesiones cerradas</td><td>Gráfica de barras por agente</td></tr>
+          <tr><td>Agentes más activos</td><td><code>COUNT(sessions) GROUP BY agent_id</code></td><td>Top 5 ranking con medallas</td></tr>
+          <tr><td>Horas pico</td><td><code>GROUP BY strftime('%H', start_time)</code></td><td>Gráfica de líneas (distribución horaria)</td></tr>
+          <tr><td>Sesiones por día</td><td><code>GROUP BY date(start_time)</code></td><td>Gráfica de área</td></tr>
+          <tr><td>Tasa de ocupación</td><td><code>(tiempo_activo / tiempo_conectado) × 100</code></td><td>Porcentaje individual por agente</td></tr>
+        </table>
+        <div class="caption">Todas las métricas se calculan con consultas SQL sobre la tabla <code>sessions</code> y se grafican con Chart.js.</div>
+      </div>
+    </section>
+
+    <!-- ===== 7. CASOS DE USO ===== -->
+    <section id="casos-uso">
+      <h2><span class="num">07</span> Casos de uso</h2>
+      <p>El sistema tiene dos actores principales: el <strong>Agente</strong> (usuario de la extensión) y el <strong>Administrador</strong> (usuario del dashboard).</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de casos de uso UML</div>
+        <pre class="mermaid">
+graph TB
+    subgraph Actor["Actores"]
+        A["👤 Agente"]
+        AD["👨‍💼 Administrador"]
+    end
+
+    subgraph UC["Casos de uso"]
+        UC1["🔌 Conectarse al sistema"]
+        UC2["📞 Atender un chat"]
+        UC3["⏸️ Pausar disponibilidad"]
+        UC4["▶️ Reanudar disponibilidad"]
+        UC5["👀 Ver panel de agentes"]
+        UC6["🔑 Cambiar PIN"]
+        UC7["📊 Ver dashboard en vivo"]
+        UC8["📋 Consultar historial"]
+        UC9["📈 Ver reportes"]
+        UC10["➕ Agregar agente"]
+        UC11["🗑️ Eliminar agente"]
+        UC12["🔄 Resetear PIN de agente"]
+    end
+
+    A --> UC1
+    A --> UC2
+    A --> UC3
+    A --> UC4
+    A --> UC5
+    A --> UC6
+    AD --> UC7
+    AD --> UC8
+    AD --> UC9
+    AD --> UC10
+    AD --> UC11
+    AD --> UC12
+</pre>
+        <div class="caption">El Agente tiene 6 casos de uso relacionados con la operación diaria. El Administrador tiene 6 casos de uso para monitoreo, análisis y gestión del equipo.</div>
+      </div>
+    </section>
+
+    <!-- ===== 8. DESPLIEGUE ===== -->
+    <section id="despliegue">
+      <h2><span class="num">08</span> Diagrama de despliegue</h2>
+      <p>El sistema puede ejecutarse de forma nativa (Node.js) o mediante Docker. Cada componente se despliega de manera independiente pero coordinada.</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de despliegue — Docker</div>
+        <pre class="mermaid">
+graph TB
+    subgraph DEV["Máquina de desarrollo / servidor"]
+        subgraph DOCKER["🐳 Docker Compose"]
+            SRV["Servidor Node.js
+                ─────────────────
+                Puerto 3000 (HTTP)
+                Puerto 3001 (WS)
+                Volumen: ./data"]
+            DB["SQLite
+                ─────────────────
+                Archivo: data/
+                whatsapp-sync.db
+                (persistente)"]
+            SRV --> DB
+        end
+    end
+
+    subgraph CLI["👤 Chrome (cada agente)"]
+        EXT["Extensión Chrome MV3
+            ─────────────────
+            Cargada como
+            'desempaquetada'
+            o desde Chrome Web Store"]
+    end
+
+    subgraph ADMIN["👨‍💼 Admin (cualquier navegador)"]
+        BROWSER["Dashboard web
+            ─────────────────
+            http://localhost:3000"]
+    end
+
+    EXT -- "WebSocket ws://localhost:3001" --> SRV
+    BROWSER -- "HTTP GET /api/*" --> SRV
+</pre>
+        <div class="caption">Docker Compose orquesta el servidor Node.js y el volumen de datos SQLite. Los agentes se conectan desde Chrome. El administrador accede desde cualquier navegador.</div>
+      </div>
+    </section>
+
+    <!-- ===== 9. COMPONENTES ===== -->
+    <section id="componentes">
+      <h2><span class="num">09</span> Diagrama de componentes</h2>
+      <p>Desglose de los módulos internos de cada componente del sistema, mostrando las dependencias entre ellos.</p>
+
+      <div class="diagram-card">
+        <div class="label">Diagrama de componentes — desglose por capa</div>
+        <pre class="mermaid">
+graph TB
+    subgraph EXT["Extensión Chrome"]
+        POP["Popup
+            ─────────────
+            Selección de agente
+            Input PIN
+            Pausa/Reanudar"]
+        OPT["Options
+            ─────────────
+            Configurar URL
+            del servidor"]
+        SW["Service Worker
+            ─────────────
+            Gestor WebSocket
+            Heartbeat
+            Enrutamiento de
+            mensajes"]
+        CS["Content Script
+            ─────────────
+            DomObserver
+            ContactDetector
+            FloatingPanel
+            (Shadow DOM)"]
+        POP --> SW
+        OPT --> SW
+        SW --> CS
+    end
+
+    subgraph SRV["Servidor Node.js"]
+        WSS["WebSocket Server
+            ─────────────
+            server.ts"]
+        RM["RoomManager
+            ─────────────
+            rooms.ts
+            Registro de agentes
+            Broadcast de presencia
+            Timeout de heartbeats"]
+        AUTH["Auth Module
+            ─────────────
+            auth.ts
+            Hash y validación
+            de PINs"]
+        API["API REST
+            ─────────────
+            routes.ts
+            /api/agents
+            /api/sessions
+            /api/reports"]
+        DB["Database Layer
+            ─────────────
+            database.ts
+            agents-repo.ts
+            sessions-repo.ts
+            activity-repo.ts"]
+        WSS --> RM
+        RM --> AUTH
+        RM --> DB
+        API --> DB
+    end
+
+    subgraph DASH["Dashboard"]
+        HTML["HTML + CSS
+            ─────────────
+            Interfaz responsive
+            Dark mode"]
+        JS["JavaScript
+            ─────────────
+            Fetch API
+            Chart.js
+            Auto-refresh"]
+        HTML --> JS
+    end
+
+    SW -- "ws://" --> WSS
+    DASH -- "HTTP" --> API
+</pre>
+        <div class="caption">Cada componente se divide en módulos con responsabilidades específicas. El Service Worker es el puente entre el Popup/Options y el servidor. El Content Script maneja la interacción con WhatsApp Web.</div>
+      </div>
+    </section>
+
+    <!-- ===== TECNOLOGÍAS ===== -->
+    <section id="tecnologias">
+      <h2>Tecnologías utilizadas</h2>
+      <p>Stack tecnológico completo del proyecto y las competencias que acredita cada una.</p>
+
+      <div class="tech-list">
+        <div class="tech-item"><strong>TypeScript</strong><span>Tipado estático, programación estructurada y OOP</span></div>
+        <div class="tech-item"><strong>Node.js</strong><span>Entorno de ejecución del servidor, asincronía, módulos</span></div>
+        <div class="tech-item"><strong>WebSocket (ws)</strong><span>Comunicación bidireccional en tiempo real, protocolos de red</span></div>
+        <div class="tech-item"><strong>Chrome Extensions MV3</strong><span>Service Workers, Shadow DOM, Manifest V3, Message Passing</span></div>
+        <div class="tech-item"><strong>SQLite (better-sqlite3)</strong><span>Base de datos embebida, persistencia, SQL, esquemas relacionales</span></div>
+        <div class="tech-item"><strong>Express.js</strong><span>Framework HTTP, API REST, middleware, routing</span></div>
+        <div class="tech-item"><strong>Mermaid.js</strong><span>Diagramas como código, documentación técnica visual</span></div>
+        <div class="tech-item"><strong>Chart.js</strong><span>Visualización de datos, gráficas interactivas, métricas</span></div>
+        <div class="tech-item"><strong>Vite</strong><span>Bundler moderno, build de extensiones, HMR</span></div>
+        <div class="tech-item"><strong>Vitest</strong><span>Testing unitario y de integración, aserciones, mocks</span></div>
+        <div class="tech-item"><strong>Docker</strong><span>Contenedores, docker-compose, portabilidad, despliegue</span></div>
+        <div class="tech-item"><strong>Git + GitHub Actions</strong><span>Control de versiones, CI/CD, automatización de builds</span></div>
+      </div>
+    </section>
+
+    <!-- ===== COMPARATIVA ===== -->
+    <section id="comparativa">
+      <h2>Comparativa: antes vs. después</h2>
+      <p>De no existir el sistema, un equipo de agentes en WhatsApp Web opera sin ninguna coordinación ni visibilidad.</p>
+
+      <div class="diagram-card">
+        <table class="comparison-table" style="margin:0">
+          <tr><th>Aspecto</th><th>Antes (sin el sistema)</th><th>Después (con el sistema)</th></tr>
+          <tr>
+            <td>Estado de los agentes</td>
+            <td class="no">✗ Desconocido — los agentes preguntan "¿estás libre?" por otro canal</td>
+            <td class="yes">✓ Visible en tiempo real: quién está atendiendo, disponible, pausado o desconectado</td>
+          </tr>
+          <tr>
+            <td>Coordinación de chats</td>
+            <td class="no">✗ Dos agentes pueden atender al mismo cliente sin saberlo</td>
+            <td class="yes">✓ Cada agente ve qué contacto está siendo atendido y por quién</td>
+          </tr>
+          <tr>
+            <td>Historial de actividad</td>
+            <td class="no">✗ No existe — no hay registro de qué se atendió</td>
+            <td class="yes">✓ Cada sesión queda registrada en SQLite con fechas, contactos y duración</td>
+          </tr>
+          <tr>
+            <td>Control de acceso</td>
+            <td class="no">✗ Cualquiera puede decir que es "Agente 1"</td>
+            <td class="yes">✓ PIN único por agente validado contra hash en base de datos</td>
+          </tr>
+          <tr>
+            <td>Métricas de productividad</td>
+            <td class="no">✗ No hay forma de medir rendimiento del equipo</td>
+            <td class="yes">✓ Reportes automáticos: tiempo promedio, horas pico, top agentes</td>
+          </tr>
+          <tr>
+            <td>Persistencia de datos</td>
+            <td class="no">✗ Al reiniciar el servidor se pierde todo</td>
+            <td class="yes">✓ SQLite guarda todo — al reiniciar los datos siguen ahí</td>
+          </tr>
+          <tr>
+            <td>Dashboard administrativo</td>
+            <td class="no">✗ No existe</td>
+            <td class="yes">✓ Panel web con 4 vistas: en vivo, historial, reportes, gestión</td>
+          </tr>
+          <tr>
+            <td>Calidad del software</td>
+            <td class="no">✗ Sin pruebas automatizadas</td>
+            <td class="yes">✓ Suite completa de tests con Vitest (unit + integration)</td>
+          </tr>
+          <tr>
+            <td>Despliegue</td>
+            <td class="no">✗ Solo local, requiere instalar dependencias manualmente</td>
+            <td class="yes">✓ Docker Compose — un solo comando levanta todo</td>
+          </tr>
+        </table>
+        <div class="caption">El sistema transforma un entorno de trabajo sin visibilidad en una plataforma coordinada, medible y profesional.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <p>WhatsApp Team Sync — Proyecto de Titulación — Ingeniería en Sistemas Computacionales</p>
+    <p>Instituto Tecnológico de Hermosillo &copy; 2026</p>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#6c5ce7',
+      primaryTextColor: '#e4e6f0',
+      primaryBorderColor: '#2a2d3e',
+      lineColor: '#a29bfe',
+      secondaryColor: '#1a1d2e',
+      tertiaryColor: '#151821',
+      fontSize: '14px',
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { showSequenceNumbers: false, actorFontSize: 13, messageFontSize: 12 },
+    er: { useMaxWidth: true, stroke: '#2a2d3e', fill: '#1a1d2e' },
+    state: { useMaxWidth: true }
+  });
+</script>
+
+</body>
+</html>
