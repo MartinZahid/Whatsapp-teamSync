@@ -41,6 +41,18 @@ function getDb(): SqlJsDatabase {
   return db
 }
 
+const DAY_MS = 86400000
+
+function queryRows<T>(sql: string, params: any[] = []): T[] {
+  const d = getDb()
+  const stmt = d.prepare(sql)
+  if (params.length) stmt.bind(params)
+  const rows: T[] = []
+  while (stmt.step()) rows.push(stmt.getAsObject() as unknown as T)
+  stmt.free()
+  return rows
+}
+
 // Event types
 export type EventType =
   | 'chat_start'
@@ -112,16 +124,7 @@ export interface ChatSessionRow {
 }
 
 export function querySessions(days: number): ChatSessionRow[] {
-  const d = getDb()
-  const cutoff = Date.now() - days * 86400000
-  const stmt = d.prepare('SELECT * FROM chat_sessions WHERE start_time >= ? ORDER BY start_time DESC')
-  stmt.bind([cutoff])
-  const rows: ChatSessionRow[] = []
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject() as unknown as ChatSessionRow)
-  }
-  stmt.free()
-  return rows
+  return queryRows<ChatSessionRow>('SELECT * FROM chat_sessions WHERE start_time >= ? ORDER BY start_time DESC', [Date.now() - days * DAY_MS])
 }
 
 // --- Metrics queries ---
@@ -133,9 +136,8 @@ export interface AgentDailyStats {
 }
 
 export function queryDailyStats(days: number): AgentDailyStats[] {
-  const d = getDb()
-  const cutoff = Date.now() - days * 86400000
-  const sql = `
+  const cutoff = Date.now() - days * DAY_MS
+  return queryRows<AgentDailyStats>(`
     SELECT
       date(start_time / 1000, 'unixepoch', 'localtime') as date,
       agent,
@@ -144,15 +146,7 @@ export function queryDailyStats(days: number): AgentDailyStats[] {
     WHERE start_time >= ?
     GROUP BY date, agent
     ORDER BY date DESC, total_seconds DESC
-  `
-  const stmt = d.prepare(sql)
-  stmt.bind([cutoff])
-  const rows: AgentDailyStats[] = []
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject() as unknown as AgentDailyStats)
-  }
-  stmt.free()
-  return rows
+  `, [cutoff])
 }
 
 export interface HourlyBuckets {
@@ -161,9 +155,8 @@ export interface HourlyBuckets {
 }
 
 export function queryPeakHours(days: number): HourlyBuckets[] {
-  const d = getDb()
-  const cutoff = Date.now() - days * 86400000
-  const sql = `
+  const cutoff = Date.now() - days * DAY_MS
+  return queryRows<HourlyBuckets>(`
     SELECT
       CAST(strftime('%H', start_time / 1000, 'unixepoch', 'localtime') AS INTEGER) as hour,
       COALESCE(SUM(duration_seconds), 0) as total_seconds
@@ -171,15 +164,7 @@ export function queryPeakHours(days: number): HourlyBuckets[] {
     WHERE start_time >= ?
     GROUP BY hour
     ORDER BY total_seconds DESC
-  `
-  const stmt = d.prepare(sql)
-  stmt.bind([cutoff])
-  const rows: HourlyBuckets[] = []
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject() as unknown as HourlyBuckets)
-  }
-  stmt.free()
-  return rows
+  `, [cutoff])
 }
 
 export interface TopAgent {
@@ -189,9 +174,8 @@ export interface TopAgent {
 }
 
 export function queryTopAgents(days: number): TopAgent[] {
-  const d = getDb()
-  const cutoff = Date.now() - days * 86400000
-  const sql = `
+  const cutoff = Date.now() - days * DAY_MS
+  return queryRows<TopAgent>(`
     SELECT
       agent,
       contact,
@@ -200,15 +184,7 @@ export function queryTopAgents(days: number): TopAgent[] {
     WHERE start_time >= ?
     GROUP BY agent, contact
     ORDER BY total_seconds DESC
-  `
-  const stmt = d.prepare(sql)
-  stmt.bind([cutoff])
-  const rows: TopAgent[] = []
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject() as unknown as TopAgent)
-  }
-  stmt.free()
-  return rows
+  `, [cutoff])
 }
 
 export function exportJSON(): string {

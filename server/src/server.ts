@@ -90,8 +90,7 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
 // --- WebSocket attached to HTTP server ---
 const wss = new WebSocketServer({ server: httpServer })
 
-console.log(`[Server] HTTP + WebSocket server started on http://localhost:${PORT}`)
-console.log(`[Server] Dashboard: http://localhost:${PORT}/dashboard`)
+console.log(`[Server] Starting HTTP + WebSocket server on port ${PORT}...`)
 
 // Heartbeat interval
 setInterval(() => {
@@ -176,25 +175,15 @@ wss.on('error', (error) => {
 })
 
 // Graceful shutdown
-process.on('SIGINT', () => {
+function shutdown() {
   console.log('[Server] Shutting down...')
-  wss.close(() => {
-    httpServer.close(() => {
-      console.log('[Server] Server closed')
-      process.exit(0)
-    })
-  })
-})
-
-process.on('SIGTERM', () => {
-  console.log('[Server] Shutting down...')
-  wss.close(() => {
-    httpServer.close(() => {
-      console.log('[Server] Server closed')
-      process.exit(0)
-    })
-  })
-})
+  wss.close(() => httpServer.close(() => {
+    console.log('[Server] Server closed')
+    process.exit(0)
+  }))
+}
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
 
 // Initialize DB then start
 initDatabase().then(() => {
