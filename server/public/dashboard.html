@@ -247,34 +247,41 @@ loadLive()
 async function loadHistory() {
   try {
     const days = document.getElementById('history-days').value
-    const data = await api(`/api/metrics?days=${days}`)
+    const sessions = await api(`/api/sessions?days=${days}`)
     const container = document.getElementById('history-content')
-    if (!data.daily || data.daily.length === 0) {
+    if (!sessions || sessions.length === 0) {
       container.innerHTML = '<div class="empty">No hay datos en este período</div>'
       return
     }
-    // Aggregate by agent: total chats and total time
-    const agg = {}
-    data.daily.forEach(r => {
-      if (!agg[r.agent]) agg[r.agent] = { chats: 0 }
-      agg[r.agent].chats += r.chats
+    // Aggregate by (agent, contact): sum durations (compute for active sessions)
+    const now = Date.now()
+    const groups = {}
+    sessions.forEach(s => {
+      const key = `${s.agent}|${s.contact}`
+      if (!groups[key]) {
+        groups[key] = { agent: s.agent, contact: s.contact, totalSeconds: 0, count: 0 }
+      }
+      const dur = s.duration_seconds != null ? s.duration_seconds : Math.round((now - s.start_time) / 1000)
+      if (dur > 0) {
+        groups[key].totalSeconds += dur
+        groups[key].count++
+      }
     })
-    data.topAgents.forEach(r => {
-      if (!agg[r.agent]) agg[r.agent] = { chats: 0 }
-      agg[r.agent].time = r.total_seconds
-    })
-    const rows = Object.entries(agg).map(([agent, v]) => ({ agent, chats: v.chats, time: v.time || 0 }))
-    rows.sort((a, b) => b.time - a.time)
+    const rows = Object.values(groups).sort((a, b) => b.totalSeconds - a.totalSeconds)
+    if (rows.length === 0) {
+      container.innerHTML = '<div class="empty">No hay sesiones con duración en este período</div>'
+      return
+    }
     container.innerHTML = `
       <table>
-        <thead><tr><th>Agente</th><th>Chats</th><th>Tiempo total</th><th>Promedio</th></tr></thead>
+        <thead><tr><th>Agente</th><th>Contacto</th><th>Tiempo atendido</th><th>Veces retomado</th></tr></thead>
         <tbody>
           ${rows.map(r => `
             <tr>
               <td>${escapeHtml(r.agent)}</td>
-              <td>${r.chats}</td>
-              <td>${formatDur(r.time)}</td>
-              <td>${r.chats > 0 ? formatDur(Math.round(r.time / r.chats)) : '-'}</td>
+              <td>${escapeHtml(r.contact)}</td>
+              <td>${formatDur(r.totalSeconds)}</td>
+              <td>${r.count > 1 ? r.count : '-'}</td>
             </tr>
           `).join('')}
         </tbody>
