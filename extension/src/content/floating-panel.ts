@@ -27,12 +27,6 @@ export class FloatingPanel {
   private timerInterval: number | null = null
   private localChatTimes: Map<string, number> = new Map()
   private chatContacts: Map<string, string | null> = new Map()
-  private isDragging = false
-  private wasDragged = false
-  private dragOffsetX = 0
-  private dragOffsetY = 0
-  private panelX = 20
-  private panelY = 20
 
   constructor() {
     this.init()
@@ -41,9 +35,10 @@ export class FloatingPanel {
   private init(): void {
     this.host = document.createElement('div')
     this.host.id = 'wts-floating-panel-host'
-    this.host.className = 'wts-host'
     this.host.style.cssText = `
       position: fixed;
+      top: 20px;
+      right: 20px;
       z-index: 2147483647;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       pointer-events: none;
@@ -54,9 +49,7 @@ export class FloatingPanel {
     this.injectStyles()
     this.render()
     this.bindEvents()
-    this.loadPosition()
     this.loadCollapsedState()
-    this.applyPosition()
   }
 
   private injectStyles(): void {
@@ -77,7 +70,7 @@ export class FloatingPanel {
       <div class="wts-panel" id="wts-panel">
         <div class="wts-header">
           <h3>
-            <span class="wts-logo">W</span>
+            <img class="wts-logo" src="" alt="Logo" width="20" height="20">
             WhatsApp Team Sync
           </h3>
           <button class="wts-toggle" id="wts-toggle" aria-label="Colapsar panel" title="Colapsar">
@@ -144,13 +137,15 @@ export class FloatingPanel {
     this.resumeBtn = this.shadowRoot.getElementById('wts-resume-btn') as HTMLButtonElement
     this.helpBtn = this.shadowRoot.getElementById('wts-help-btn') as HTMLButtonElement
     this.cancelHelpBtn = this.shadowRoot.getElementById('wts-cancel-help-btn') as HTMLButtonElement
+
+    // Set logo src via runtime URL (content script needs chrome.runtime.getURL)
+    const logo = this.shadowRoot?.querySelector('.wts-logo') as HTMLImageElement
+    if (logo) logo.src = chrome.runtime.getURL('icons/icon-48.png')
   }
 
   private bindEvents(): void {
     this.toggleBtn?.addEventListener('click', () => this.toggleCollapse())
-    this.collapsedBadge?.addEventListener('click', () => { if (!this.wasDragged) this.toggleCollapse() })
-    this.collapsedBadge?.addEventListener('mousedown', (e) => this.startDrag(e))
-    this.collapsedBadge?.addEventListener('touchstart', (e) => this.startDrag(e), { passive: false })
+    this.collapsedBadge?.addEventListener('click', () => this.toggleCollapse())
 
     this.pauseBtn?.addEventListener('click', () => {
       this.isPaused = true
@@ -448,85 +443,6 @@ export class FloatingPanel {
       clearInterval(this.timerInterval)
       this.timerInterval = null
     }
-  }
-
-  // --- Drag ---
-  private startDrag(e: MouseEvent | TouchEvent): void {
-    const header = e.currentTarget as HTMLElement
-    if (header?.closest('.wts-toggle')) return // don't drag on toggle button
-
-    this.isDragging = true
-    this.wasDragged = false
-    const rect = this.host!.getBoundingClientRect()
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
-    this.dragOffsetX = clientX - rect.left
-    this.dragOffsetY = clientY - rect.top
-
-    document.addEventListener('mousemove', this.onDrag)
-    document.addEventListener('mouseup', this.stopDrag)
-    document.addEventListener('touchmove', this.onDrag, { passive: false })
-    document.addEventListener('touchend', this.stopDrag)
-    document.body.style.userSelect = 'none'
-    e.preventDefault()
-  }
-
-  private onDrag = (e: MouseEvent | TouchEvent): void => {
-    if (!this.isDragging) return
-    this.wasDragged = true
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
-    this.panelX = clientX - this.dragOffsetX
-    this.panelY = clientY - this.dragOffsetY
-    this.applyPosition()
-    e.preventDefault()
-  }
-
-  private stopDrag = (): void => {
-    if (!this.isDragging) return
-    this.isDragging = false
-    document.removeEventListener('mousemove', this.onDrag)
-    document.removeEventListener('mouseup', this.stopDrag)
-    document.removeEventListener('touchmove', this.onDrag)
-    document.removeEventListener('touchend', this.stopDrag)
-    document.body.style.userSelect = ''
-    this.savePosition()
-  }
-
-  private applyPosition(): void {
-    if (this.host) {
-      // Clamp to viewport
-      const maxX = window.innerWidth - 60
-      const maxY = window.innerHeight - 60
-      this.host.style.left = `${Math.max(0, Math.min(this.panelX, maxX))}px`
-      this.host.style.top = `${Math.max(0, Math.min(this.panelY, maxY))}px`
-      this.host.style.right = 'auto'
-    }
-  }
-
-  private loadPosition(): void {
-    try {
-      const savedX = localStorage.getItem('wts_panel_x')
-      const savedY = localStorage.getItem('wts_panel_y')
-      if (savedX !== null && savedY !== null) {
-        this.panelX = parseInt(savedX, 10)
-        this.panelY = parseInt(savedY, 10)
-      } else {
-        // Default: right side
-        this.panelX = window.innerWidth - 320
-        this.panelY = 20
-      }
-    } catch {
-      this.panelX = window.innerWidth - 320
-      this.panelY = 20
-    }
-  }
-
-  private savePosition(): void {
-    try {
-      localStorage.setItem('wts_panel_x', this.panelX.toString())
-      localStorage.setItem('wts_panel_y', this.panelY.toString())
-    } catch { /* ignore */ }
   }
 
   private escapeHtml(text: string): string {
