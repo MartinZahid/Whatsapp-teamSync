@@ -9,10 +9,16 @@ interface ClientConnection {
   agentId: string
 }
 
+const MAX_NAME_LENGTH = 50
+const MAX_CONTACT_LENGTH = 200
+const MAX_MESSAGE_RATE = 20 // messages per second per connection
+const STALE_OFFLINE_MS = 300000 // 5 min, then delete agent entirely
+
 export class RoomManager {
   private agents = new Map<string, Agent>()
   private connections = new Map<string, ClientConnection>()
   private messageId = 0
+  private rateCounters = new Map<string, { count: number; resetAt: number }>()
 
   // Generate unique agent ID
   private generateAgentId(name: string): string {
@@ -38,6 +44,7 @@ export class RoomManager {
       existingAgent.status = 'available'
       existingAgent.contact = null
       existingAgent.color = STATUS_COLORS.available
+      existingAgent.helpRequested = undefined
       existingAgent.lastSeen = Date.now()
 
       this.broadcastPresence()
@@ -70,33 +77,61 @@ export class RoomManager {
     const agent = this.agents.get(agentId)
     if (!agent) return
 
-    agent.lastSeen = Date.now()
+    // Rate limiting
+    const now = Date.now()
+    const rateKey = agentId
+    const counter = this.rateCounters.get(rateKey)
+    if (counter && counter.resetAt > now) {
+      counter.count++
+      if (counter.count > MAX_MESSAGE_RATE) {
+        console.warn(`[Server] Rate limit exceeded for ${agent.name}, dropping message`)
+        return
+      }
+    } else {
+      this.rateCounters.set(rateKey, { count: 1, resetAt: now + 1000 })
+    }
+
+    // Validate string lengths
+    if ('contact' in message && typeof message.contact === 'string' && message.contact.length > MAX_CONTACT_LENGTH) {
+      console.warn(`[Server] Contact too long from ${agent.name}, truncating`)
+      message.contact = message.contact.slice(0, MAX_CONTACT_LENGTH)
+    }
+    if ('reason' in message && typeof message.reason === 'string' && message.reason.length > MAX_CONTACT_LENGTH) {
+      message.reason = message.reason.slice(0, MAX_CONTACT_LENGTH)
+    }
+
+    agent.lastSeen = now
 
     if (isAttendingMessage(message)) {
       agent.status = 'active'
       agent.contact = message.contact
       agent.color = STATUS_COLORS.active
+      agent.helpRequested = undefined
       console.log(`[Server] ${agent.name} attending to: ${message.contact}`)
     } else if (isPausedMessage(message)) {
       agent.status = 'paused'
       agent.contact = null
       agent.color = STATUS_COLORS.paused
+      agent.helpRequested = undefined
       console.log(`[Server] ${agent.name} paused: ${message.reason || 'Sin razón'}`)
     } else if (isAvailableMessage(message)) {
       agent.status = 'available'
       agent.contact = null
       agent.color = STATUS_COLORS.available
+      agent.helpRequested = undefined
       console.log(`[Server] ${agent.name} available`)
     } else if (isOfflineMessage(message)) {
       agent.status = 'offline'
       agent.contact = null
       agent.color = STATUS_COLORS.offline
+      agent.helpRequested = undefined
       console.log(`[Server] ${agent.name} offline`)
     } else if (isDeleteAgentMessage(message)) {
       // Full removal: delete from both Maps
       const deletedAgent = this.agents.get(agentId)
       this.agents.delete(agentId)
       this.connections.delete(agentId)
+      this.rateCounters.delete(agentId)
       if (deletedAgent) {
         console.log(`[Server] Agent removed: ${deletedAgent.name}`)
       }
@@ -169,14 +204,25 @@ export class RoomManager {
   // Heartbeat check
   checkHeartbeats(): void {
     const now = Date.now()
+    let changed = false
     for (const [agentId, agent] of this.agents) {
       // Mark as offline if no heartbeat for 60 seconds
       if (now - agent.lastSeen > 60000 && agent.status !== 'offline') {
         agent.status = 'offline'
         agent.color = STATUS_COLORS.offline
+        agent.helpRequested = undefined
         console.log(`[Server] Heartbeat timeout for ${agent.name}`)
+        changed = true
+      }
+      // Delete if offline for more than STALE_OFFLINE_MS
+      if (agent.status === 'offline' && now - agent.lastSeen > STALE_OFFLINE_MS) {
+        this.agents.delete(agentId)
+        this.connections.delete(agentId)
+        this.rateCounters.delete(agentId)
+        console.log(`[Server] Removing stale offline agent: ${agent.name}`)
+        changed = true
       }
     }
-    this.broadcastPresence()
+    if (changed) this.broadcastPresence()
   }
 }

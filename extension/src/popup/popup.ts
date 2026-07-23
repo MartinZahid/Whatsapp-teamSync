@@ -130,9 +130,22 @@ async function init() {
       const resp = await chrome.runtime.sendMessage({ type: 'GET_CONNECTION_STATUS' })
       if (resp?.connected) {
         updateStatus(true)
-        updateBadge(isPaused ? 'Pausado' : 'Disponible')
+        // Sync real state from background
+        const state = await chrome.runtime.sendMessage({ type: 'GET_STATE' })
+        if (state) {
+          isPaused = state.isPaused
+          isHelpRequested = state.isHelpRequested
+        }
+        const badgeText = isHelpRequested ? 'Ayuda' : (isPaused ? 'Pausado' : 'Disponible')
+        updateBadge(badgeText)
         ;($('pause-btn') as HTMLButtonElement).disabled = false
+        ;($('pause-btn') as HTMLButtonElement).hidden = isPaused
         ;($('resume-btn') as HTMLButtonElement).disabled = !isPaused
+        ;($('resume-btn') as HTMLButtonElement).hidden = !isPaused
+        ;($('help-btn') as HTMLButtonElement).disabled = false
+        ;($('help-btn') as HTMLButtonElement).hidden = isHelpRequested
+        ;($('cancel-help-btn') as HTMLButtonElement).disabled = !isHelpRequested
+        ;($('cancel-help-btn') as HTMLButtonElement).hidden = !isHelpRequested
       }
     } catch {}
     chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: currentConfig.agentName })

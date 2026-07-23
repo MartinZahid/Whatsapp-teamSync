@@ -32,6 +32,7 @@ type RuntimeMessage =
   | { type: 'CONTENT_READY' }
   | { type: 'POPUP_READY'; agentName: string }
   | { type: 'GET_CONNECTION_STATUS' }
+  | { type: 'GET_STATE' }
   | { type: 'DELETE_AGENT'; agentName: string }
   | { type: 'HELP_REQUEST'; requesting: boolean }
 
@@ -351,6 +352,15 @@ class BackgroundManager {
         })
         break
 
+      case 'GET_STATE': {
+        const myAgent = this.config?.agentName ? this.agents.get(this.config.agentName) : null
+        sendResponse({
+          isPaused: myAgent?.status === 'paused',
+          isHelpRequested: myAgent?.helpRequested === true
+        })
+        break
+      }
+
       case 'DELETE_AGENT':
         this.handleDeleteAgent(message.agentName)
         sendResponse({ success: true })
@@ -392,6 +402,10 @@ class BackgroundManager {
     )
   }
 
+  private broadcastStatus(status: AgentStatus): void {
+    chrome.runtime.sendMessage({ type: 'AGENT_STATUS', status }).catch(() => {})
+  }
+
   private handlePause(): void {
     const agentName = this.config?.agentName
     if (!agentName) return
@@ -400,6 +414,7 @@ class BackgroundManager {
       { status: 'paused', contact: null },
       { type: 'PAUSED', agent: agentName, reason: 'user_paused' }
     )
+    this.broadcastStatus('paused')
   }
 
   private handleResume(): void {
@@ -410,6 +425,7 @@ class BackgroundManager {
       { status: 'available', contact: null },
       { type: 'AVAILABLE', agent: agentName }
     )
+    this.broadcastStatus('available')
   }
 
   private handleAvailable(): void {
@@ -467,6 +483,7 @@ class BackgroundManager {
       type: 'PRESENCE_UPDATE',
       agents: this.getAllAgents()
     })
+    this.broadcastStatus(requesting ? 'active' : 'available')
   }
 
   private handleServerUrlUpdate(url: string): void {
