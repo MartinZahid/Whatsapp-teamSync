@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - WhatsApp Team Sync</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #F3F4F6;
+  color: #1F2937;
+  padding: 20px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+
+/* Header */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; background: linear-gradient(135deg, #25D366, #128C7E);
+  border-radius: 12px; color: white; margin-bottom: 20px;
+}
+header h1 { font-size: 20px; font-weight: 600; }
+header .subtitle { font-size: 13px; opacity: 0.8; }
+header .server-info { text-align: right; font-size: 12px; }
+header .server-info .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+header .server-info .dot.online { background: #22C55E; }
+header .server-info .dot.offline { background: #EF4444; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; background: white; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+.tab { flex: 1; padding: 10px; text-align: center; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+  background: transparent; color: #6B7280; font-family: inherit; }
+.tab:hover { background: #F3F4F6; }
+.tab.active { background: #25D366; color: white; }
+
+/* Panels */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Cards */
+.card {
+  background: white; border-radius: 10px; padding: 16px; margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+
+/* Stats grid */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: white; border-radius: 10px; padding: 16px; text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.stat-card .value { font-size: 28px; font-weight: 700; color: #25D366; }
+.stat-card .label { font-size: 12px; color: #6B7280; margin-top: 4px; }
+
+/* Agent live list */
+.agent-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+.agent-row:last-child { border-bottom: none; }
+.agent-row .name { font-weight: 600; font-size: 14px; flex: 1; }
+.agent-row .status { font-size: 12px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
+.agent-row .status.active { background: #FEE2E2; color: #991B1B; }
+.agent-row .status.paused { background: #FEF3C7; color: #92400E; }
+.agent-row .status.available { background: #D1FAE5; color: #065F46; }
+.agent-row .status.offline { background: #F3F4F6; color: #6B7280; }
+.agent-row .contact { font-size: 12px; color: #6B7280; }
+.agent-row .help-badge {
+  background: #EF4444; color: white; font-size: 10px; font-weight: 600;
+  padding: 2px 6px; border-radius: 999px;
+}
+
+/* Charts row */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chart-container { position: relative; height: 250px; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 10px; color: #6B7280; font-weight: 500; border-bottom: 2px solid #E5E7EB; }
+td { padding: 8px 10px; border-bottom: 1px solid #F3F4F6; }
+
+/* Controls */
+.controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.controls label { font-size: 13px; color: #6B7280; }
+.controls select { padding: 6px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; font-family: inherit; }
+.controls .btn {
+  padding: 6px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: opacity 0.2s;
+}
+.controls .btn:hover { opacity: 0.8; }
+.controls .btn-primary { background: #25D366; color: white; }
+.controls .btn-secondary { background: #E5E7EB; color: #374151; }
+
+/* Empty state */
+.empty { padding: 40px; text-align: center; color: #9CA3AF; font-size: 14px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .charts-row { grid-template-columns: 1fr; }
+  header { flex-direction: column; gap: 8px; text-align: center; }
+  header .server-info { text-align: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>WhatsApp Team Sync</h1>
+      <div class="subtitle">Dashboard de métricas y monitoreo</div>
+    </div>
+    <div class="server-info">
+      <div><span class="dot online" id="server-dot"></span><span id="server-status">Conectado</span></div>
+      <div style="font-size:11px;margin-top:4px" id="server-time"></div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="live">En vivo</button>
+    <button class="tab" data-tab="history">Historial</button>
+    <button class="tab" data-tab="reports">Reportes</button>
+    <button class="tab" data-tab="management">Gestión</button>
+  </div>
+
+  <!-- En vivo -->
+  <div class="panel active" id="panel-live">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="value" id="live-total">0</div><div class="label">Agentes totales</div></div>
+      <div class="stat-card"><div class="value" id="live-active">0</div><div class="label">En chat ahora</div></div>
+      <div class="stat-card"><div class="value" id="live-available">0</div><div class="label">Disponibles</div></div>
+      <div class="stat-card"><div class="value" id="live-help">0</div><div class="label">Piden ayuda</div></div>
+    </div>
+    <div class="card"><h3>Agentes conectados</h3><div id="live-agents"><div class="empty">Esperando datos...</div></div></div>
+  </div>
+
+  <!-- Historial -->
+  <div class="panel" id="panel-history">
+    <div class="controls">
+      <label>Últimos</label>
+      <select id="history-days"><option value="1">1 día</option><option value="3">3 días</option><option value="7" selected>7 días</option><option value="30">30 días</option></select>
+      <button class="btn btn-primary" onclick="loadHistory()">Actualizar</button>
+    </div>
+    <div class="card"><div id="history-content"><div class="empty">Selecciona un período y haz clic en Actualizar</div></div></div>
+  </div>
+
+  <!-- Reportes -->
+  <div class="panel" id="panel-reports">
+    <div class="controls">
+      <label>Últimos</label>
+      <select id="report-days"><option value="1">1 día</option><option value="3">3 días</option><option value="7" selected>7 días</option><option value="30">30 días</option></select>
+      <button class="btn btn-primary" onclick="loadReports()">Actualizar</button>
+      <button class="btn btn-secondary" onclick="exportData()">Exportar JSON</button>
+    </div>
+    <div class="charts-row">
+      <div class="card"><h3>Chats por día / agente</h3><div class="chart-container"><canvas id="chart-daily"></canvas></div></div>
+      <div class="card"><h3>Horas pico</h3><div class="chart-container"><canvas id="chart-hours"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Top agentes</h3><div id="top-agents-table"><div class="empty">Carga los reportes para ver datos</div></div></div>
+  </div>
+
+  <!-- Gestión -->
+  <div class="panel" id="panel-management">
+    <div class="card">
+      <h3>Información del servidor</h3>
+      <table><tbody id="mgmt-info"></tbody></table>
+    </div>
+    <div class="card">
+      <h3>Estado de la base de datos</h3>
+      <p style="font-size:13px;color:#6B7280">Base de datos en memoria SQLite. Los eventos se registran automáticamente cuando los agentes cambian de estado, inician chats, pausan o piden ayuda.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Tabs ---
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+    tab.classList.add('active')
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active')
+  })
+})
+
+// --- Server time ---
+function updateTime() {
+  document.getElementById('server-time').textContent = new Date().toLocaleString('es-ES')
+}
+setInterval(updateTime, 1000)
+updateTime()
+
+// --- Fetch helpers ---
+async function api(path) {
+  const res = await fetch(path)
+  if (!res.ok) throw new Error(res.statusText)
+  return res.json()
+}
+
+// --- Live panel ---
+async function loadLive() {
+  try {
+    const agents = await api('/api/agents')
+    const total = agents.length
+    const active = agents.filter(a => a.status === 'active').length
+    const available = agents.filter(a => a.status === 'available').length
+    const help = agents.filter(a => a.helpRequested).length
+
+    document.getElementById('live-total').textContent = total
+    document.getElementById('live-active').textContent = active
+    document.getElementById('live-available').textContent = available
+    document.getElementById('live-help').textContent = help
+
+    const container = document.getElementById('live-agents')
+    if (agents.length === 0) {
+      container.innerHTML = '<div class="empty">No hay agentes conectados</div>'
+    } else {
+      container.innerHTML = agents.map(a => `
+        <div class="agent-row">
+          <span class="name">${escapeHtml(a.name)}</span>
+          <span class="status ${a.status}">${statusLabel(a.status)}</span>
+          ${a.contact ? `<span class="contact">${escapeHtml(a.contact)}</span>` : ''}
+          ${a.helpRequested ? '<span class="help-badge">Ayuda</span>' : ''}
+        </div>
+      `).join('')
+    }
+  } catch (err) {
+    document.getElementById('live-agents').innerHTML = '<div class="empty">Error al conectar con el servidor</div>'
+  }
+}
+
+function statusLabel(s) {
+  return { active: 'Atendiendo', paused: 'Pausado', available: 'Disponible', offline: 'Desconectado' }[s] || s
+}
+
+function escapeHtml(t) {
+  const d = document.createElement('div'); d.textContent = t; return d.innerHTML
+}
+
+setInterval(loadLive, 5000)
+loadLive()
+
+// --- History panel ---
+async function loadHistory() {
+  const days = document.getElementById('history-days').value
+  const data = await api(`/api/metrics?days=${days}`)
+  const container = document.getElementById('history-content')
+  if (!data.daily || data.daily.length === 0) {
+    container.innerHTML = '<div class="empty">No hay eventos en este período</div>'
+    return
+  }
+  container.innerHTML = `
+    <table>
+      <thead><tr><th>Fecha</th><th>Agente</th><th>Chats</th><th>Ayudas</th></tr></thead>
+      <tbody>
+        ${data.daily.map(r => `
+          <tr><td>${r.date}</td><td>${escapeHtml(r.agent)}</td><td>${r.chats}</td><td>${r.helps}</td></tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+// --- Reports panel ---
+let dailyChart = null
+let hoursChart = null
+
+async function loadReports() {
+  const days = document.getElementById('report-days').value
+  const data = await api(`/api/metrics?days=${days}`)
+
+  // Top agents table
+  const topContainer = document.getElementById('top-agents-table')
+  if (!data.topAgents || data.topAgents.length === 0) {
+    topContainer.innerHTML = '<div class="empty">Sin datos</div>'
+  } else {
+    topContainer.innerHTML = `
+      <table>
+        <thead><tr><th>#</th><th>Agente</th><th>Chats</th></tr></thead>
+        <tbody>
+          ${data.topAgents.map((r, i) => `
+            <tr><td>${i + 1}</td><td>${escapeHtml(r.agent)}</td><td>${r.chats}</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `
+  }
+
+  // Daily chart
+  const dailyCtx = document.getElementById('chart-daily').getContext('2d')
+  if (dailyChart) dailyChart.destroy()
+
+  const dates = [...new Set((data.daily || []).map(r => r.date))].sort()
+  const agents = [...new Set((data.daily || []).map(r => r.agent))]
+  const colors = ['#25D366','#EF4444','#F59E0B','#3B82F6','#8B5CF6','#EC4899','#14B8A6','#F97316']
+
+  const datasets = agents.map((agent, i) => ({
+    label: agent,
+    data: dates.map(d => {
+      const row = data.daily.find(r => r.date === d && r.agent === agent)
+      return row ? row.chats : 0
+    }),
+    backgroundColor: colors[i % colors.length] + '60',
+    borderColor: colors[i % colors.length],
+    borderWidth: 2,
+    tension: 0.3,
+    fill: false
+  }))
+
+  dailyChart = new Chart(dailyCtx, {
+    type: 'line',
+    data: { labels: dates, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        x: { ticks: { maxRotation: 45 } }
+      }
+    }
+  })
+
+  // Peak hours chart
+  const hoursCtx = document.getElementById('chart-hours').getContext('2d')
+  if (hoursChart) hoursChart.destroy()
+
+  const hours = Array.from({length: 24}, (_, i) => i)
+  const hourCounts = hours.map(h => {
+    const found = (data.peakHours || []).find(r => r.hour === h)
+    return found ? found.count : 0
+  })
+
+  hoursChart = new Chart(hoursCtx, {
+    type: 'bar',
+    data: {
+      labels: hours.map(h => `${String(h).padStart(2, '0')}:00`),
+      datasets: [{
+        label: 'Eventos',
+        data: hourCounts,
+        backgroundColor: hourCounts.map(v => v > 0 ? '#25D366' : '#E5E7EB'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        x: { ticks: { font: { size: 10 }, maxRotation: 90 } }
+      }
+    }
+  })
+}
+
+// --- Export ---
+function exportData() {
+  window.open('/api/export', '_blank')
+}
+
+// --- Management ---
+function loadManagement() {
+  const info = [
+    ['Servidor', `http://localhost:${location.port}`],
+    ['WebSocket', `ws://localhost:${location.port}`],
+    ['Dashboard', location.href],
+    ['Base de datos', 'SQLite en memoria'],
+    ['API Metrics', '/api/metrics?days=7'],
+    ['API Agents', '/api/agents'],
+    ['API Export', '/api/export']
+  ]
+  document.getElementById('mgmt-info').innerHTML = info.map(([k, v]) =>
+    `<tr><td style="font-weight:500">${k}</td><td style="color:#6B7280">${v}</td></tr>`
+  ).join('')
+}
+loadManagement()
+</script>
+</body>
+</html>

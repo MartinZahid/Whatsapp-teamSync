@@ -6,6 +6,7 @@
     "strict": true,
     "lib": ["ES2022"],
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "..",

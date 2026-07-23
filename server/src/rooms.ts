@@ -2,6 +2,7 @@
 
 import { WebSocket } from 'ws'
 import { Agent, AgentStatus, WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, isDeleteAgentMessage, isHeartbeatMessage, isHelpRequestMessage, STATUS_COLORS, PresenceUpdate } from './types.js'
+import { insertEvent } from './database.js'
 
 interface ClientConnection {
   ws: import('ws').WebSocket
@@ -49,6 +50,7 @@ export class RoomManager {
 
       this.broadcastPresence()
 
+      insertEvent(name, 'connected')
       console.log(`[Server] Agent reconnected: ${name} (${existingAgent.id})`)
       return existingAgent.id
     }
@@ -68,6 +70,7 @@ export class RoomManager {
     this.agents.set(agentId, agent)
     this.broadcastPresence()
 
+    insertEvent(name, 'connected')
     console.log(`[Server] Agent registered: ${name} (${agentId})`)
     return agentId
   }
@@ -107,24 +110,28 @@ export class RoomManager {
       agent.contact = message.contact
       agent.color = STATUS_COLORS.active
       agent.helpRequested = undefined
+      insertEvent(agent.name, 'chat_start', message.contact)
       console.log(`[Server] ${agent.name} attending to: ${message.contact}`)
     } else if (isPausedMessage(message)) {
       agent.status = 'paused'
       agent.contact = null
       agent.color = STATUS_COLORS.paused
       agent.helpRequested = undefined
+      insertEvent(agent.name, 'paused', message.reason)
       console.log(`[Server] ${agent.name} paused: ${message.reason || 'Sin razón'}`)
     } else if (isAvailableMessage(message)) {
       agent.status = 'available'
       agent.contact = null
       agent.color = STATUS_COLORS.available
       agent.helpRequested = undefined
+      insertEvent(agent.name, 'resumed')
       console.log(`[Server] ${agent.name} available`)
     } else if (isOfflineMessage(message)) {
       agent.status = 'offline'
       agent.contact = null
       agent.color = STATUS_COLORS.offline
       agent.helpRequested = undefined
+      insertEvent(agent.name, 'disconnected')
       console.log(`[Server] ${agent.name} offline`)
     } else if (isDeleteAgentMessage(message)) {
       // Full removal: delete from both Maps
@@ -139,6 +146,7 @@ export class RoomManager {
       return // Heartbeat does not change state, no broadcast needed
     } else if (isHelpRequestMessage(message)) {
       agent.helpRequested = message.requesting
+      insertEvent(agent.name, message.requesting ? 'help_request' : 'help_cancel')
       console.log(`[Server] ${agent.name} ${message.requesting ? 'solicita ayuda' : 'cancela ayuda'}`)
     }
 
@@ -160,6 +168,7 @@ export class RoomManager {
       agent.status = 'offline'
       agent.color = STATUS_COLORS.offline
       agent.lastSeen = Date.now()
+      insertEvent(agent.name, 'disconnected')
       this.broadcastPresence()
     }
     this.connections.delete(agentId)

@@ -1,16 +1,90 @@
-// WebSocket Server for WhatsApp Team Sync
+// WebSocket Server for WhatsApp Team Sync + Metrics Dashboard
 
 import { WebSocketServer, WebSocket } from 'ws'
+import { createServer, IncomingMessage, ServerResponse } from 'http'
+import { readFileSync, existsSync } from 'fs'
+import { join, extname } from 'path'
 import { RoomManager } from './rooms.js'
-import { WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, ServerInfoMessage, ErrorMessage, PresenceUpdate, AgentStatus } from './types.js'
+import { initDatabase, insertEvent, queryDailyStats, queryPeakHours, queryTopAgents, exportJSON } from './database.js'
+import { WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, ErrorMessage } from './types.js'
+import { fileURLToPath } from 'url'
 
-const PORT = process.env.PORT || 3001
+const PORT = Number(process.env.PORT) || 3001
 const HEARTBEAT_INTERVAL = 30000
+const __dirname = join(fileURLToPath(import.meta.url), '..')
 
 const roomManager = new RoomManager()
-const wss = new WebSocketServer({ port: Number(PORT) })
 
-console.log(`[Server] WebSocket server started on ws://localhost:${PORT}`)
+// --- MIME types for static files ---
+const MIME: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.json': 'application/json'
+}
+
+// --- HTTP server for dashboard ---
+const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+  // CORS for extension
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
+
+  const url = new URL(req.url || '/', `http://${req.headers.host}`)
+  const path = url.pathname
+
+  // API routes
+  if (path === '/api/metrics') {
+    const days = Math.min(parseInt(url.searchParams.get('days') || '7'), 90)
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({
+      daily: queryDailyStats(days),
+      peakHours: queryPeakHours(days),
+      topAgents: queryTopAgents(days)
+    }))
+    return
+  }
+
+  if (path === '/api/agents') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify(roomManager.getAllAgents()))
+    return
+  }
+
+  if (path === '/api/export') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Content-Disposition': 'attachment; filename="metrics-export.json"'
+    })
+    res.end(exportJSON())
+    return
+  }
+
+  // Serve static files from server/public/
+  let filePath = join(__dirname, '..', 'public', path === '/' ? 'dashboard.html' : path)
+  if (!existsSync(filePath)) {
+    filePath = join(__dirname, '..', 'public', 'dashboard.html')
+  }
+
+  try {
+    const content = readFileSync(filePath)
+    const ext = extname(filePath)
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
+    res.end(content)
+  } catch {
+    res.writeHead(404, { 'Content-Type': 'text/plain' })
+    res.end('Not found')
+  }
+})
+
+// --- WebSocket attached to HTTP server ---
+const wss = new WebSocketServer({ server: httpServer })
+
+console.log(`[Server] HTTP + WebSocket server started on http://localhost:${PORT}`)
+console.log(`[Server] Dashboard: http://localhost:${PORT}/dashboard`)
 
 // Heartbeat interval
 setInterval(() => {
@@ -98,15 +172,25 @@ wss.on('error', (error) => {
 process.on('SIGINT', () => {
   console.log('[Server] Shutting down...')
   wss.close(() => {
-    console.log('[Server] Server closed')
-    process.exit(0)
+    httpServer.close(() => {
+      console.log('[Server] Server closed')
+      process.exit(0)
+    })
   })
 })
 
 process.on('SIGTERM', () => {
   console.log('[Server] Shutting down...')
   wss.close(() => {
-    console.log('[Server] Server closed')
-    process.exit(0)
+    httpServer.close(() => {
+      console.log('[Server] Server closed')
+      process.exit(0)
+    })
   })
+})
+
+// Initialize DB then start
+initDatabase().catch(err => {
+  console.error('[Server] Failed to initialize database:', err)
+  process.exit(1)
 })
