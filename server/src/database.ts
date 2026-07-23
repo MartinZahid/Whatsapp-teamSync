@@ -129,8 +129,7 @@ export function querySessions(days: number): ChatSessionRow[] {
 export interface AgentDailyStats {
   date: string
   agent: string
-  chats: number
-  helps: number
+  total_seconds: number
 }
 
 export function queryDailyStats(days: number): AgentDailyStats[] {
@@ -140,11 +139,11 @@ export function queryDailyStats(days: number): AgentDailyStats[] {
     SELECT
       date(start_time / 1000, 'unixepoch', 'localtime') as date,
       agent,
-      COUNT(*) as chats
+      COALESCE(SUM(duration_seconds), 0) as total_seconds
     FROM chat_sessions
     WHERE start_time >= ?
     GROUP BY date, agent
-    ORDER BY date DESC, chats DESC
+    ORDER BY date DESC, total_seconds DESC
   `
   const stmt = d.prepare(sql)
   stmt.bind([cutoff])
@@ -158,7 +157,7 @@ export function queryDailyStats(days: number): AgentDailyStats[] {
 
 export interface HourlyBuckets {
   hour: number
-  count: number
+  total_seconds: number
 }
 
 export function queryPeakHours(days: number): HourlyBuckets[] {
@@ -167,11 +166,11 @@ export function queryPeakHours(days: number): HourlyBuckets[] {
   const sql = `
     SELECT
       CAST(strftime('%H', start_time / 1000, 'unixepoch', 'localtime') AS INTEGER) as hour,
-      COUNT(*) as count
+      COALESCE(SUM(duration_seconds), 0) as total_seconds
     FROM chat_sessions
     WHERE start_time >= ?
     GROUP BY hour
-    ORDER BY count DESC
+    ORDER BY total_seconds DESC
   `
   const stmt = d.prepare(sql)
   stmt.bind([cutoff])
@@ -185,7 +184,7 @@ export function queryPeakHours(days: number): HourlyBuckets[] {
 
 export interface TopAgent {
   agent: string
-  chats: number
+  contact: string
   total_seconds: number
 }
 
@@ -195,11 +194,11 @@ export function queryTopAgents(days: number): TopAgent[] {
   const sql = `
     SELECT
       agent,
-      COUNT(*) as chats,
+      contact,
       COALESCE(SUM(duration_seconds), 0) as total_seconds
     FROM chat_sessions
     WHERE start_time >= ?
-    GROUP BY agent
+    GROUP BY agent, contact
     ORDER BY total_seconds DESC
   `
   const stmt = d.prepare(sql)

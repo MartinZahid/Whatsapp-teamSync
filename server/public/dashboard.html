@@ -156,10 +156,10 @@ td { padding: 8px 10px; border-bottom: 1px solid #F3F4F6; }
       <button class="btn btn-secondary" onclick="exportData()">Exportar JSON</button>
     </div>
     <div class="charts-row">
-      <div class="card"><h3>Chats por día / agente</h3><div class="chart-container"><canvas id="chart-daily"></canvas></div></div>
-      <div class="card"><h3>Horas pico</h3><div class="chart-container"><canvas id="chart-hours"></canvas></div></div>
+      <div class="card"><h3>Tiempo por día / agente (minutos)</h3><div class="chart-container"><canvas id="chart-daily"></canvas></div></div>
+      <div class="card"><h3>Horas con más actividad (minutos)</h3><div class="chart-container"><canvas id="chart-hours"></canvas></div></div>
     </div>
-    <div class="card"><h3>Top agentes</h3><div id="top-agents-table"><div class="empty">Carga los reportes para ver datos</div></div></div>
+    <div class="card"><h3>Top contactos atendidos</h3><div id="top-agents-table"><div class="empty">Carga los reportes para ver datos</div></div></div>
   </div>
 
   <!-- Gestión -->
@@ -307,24 +307,24 @@ async function loadReports() {
   const days = document.getElementById('report-days').value
   const data = await api(`/api/metrics?days=${days}`)
 
-  // Top agents table
+  // Top contacts table
   const topContainer = document.getElementById('top-agents-table')
   if (!data.topAgents || data.topAgents.length === 0) {
     topContainer.innerHTML = '<div class="empty">Sin datos</div>'
   } else {
     topContainer.innerHTML = `
       <table>
-        <thead><tr><th>#</th><th>Agente</th><th>Chats</th><th>Tiempo total</th></tr></thead>
+        <thead><tr><th>#</th><th>Agente</th><th>Contacto</th><th>Tiempo total</th></tr></thead>
         <tbody>
           ${data.topAgents.map((r, i) => `
-            <tr><td>${i + 1}</td><td>${escapeHtml(r.agent)}</td><td>${r.chats}</td><td>${formatDur(r.total_seconds)}</td></tr>
+            <tr><td>${i + 1}</td><td>${escapeHtml(r.agent)}</td><td>${escapeHtml(r.contact)}</td><td>${formatDur(r.total_seconds)}</td></tr>
           `).join('')}
         </tbody>
       </table>
     `
   }
 
-  // Daily chart
+  // Daily chart (time in minutes per agent per day)
   const dailyCtx = document.getElementById('chart-daily').getContext('2d')
   if (dailyChart) dailyChart.destroy()
 
@@ -336,7 +336,7 @@ async function loadReports() {
     label: agent,
     data: dates.map(d => {
       const row = data.daily.find(r => r.date === d && r.agent === agent)
-      return row ? row.chats : 0
+      return row ? Math.round(row.total_seconds / 60) : 0
     }),
     backgroundColor: colors[i % colors.length] + '60',
     borderColor: colors[i % colors.length],
@@ -352,20 +352,20 @@ async function loadReports() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        y: { beginAtZero: true, title: { display: true, text: 'Minutos' } },
         x: { ticks: { maxRotation: 45 } }
       }
     }
   })
 
-  // Peak hours chart
+  // Peak hours chart (time in minutes per hour)
   const hoursCtx = document.getElementById('chart-hours').getContext('2d')
   if (hoursChart) hoursChart.destroy()
 
   const hours = Array.from({length: 24}, (_, i) => i)
-  const hourCounts = hours.map(h => {
+  const hourMins = hours.map(h => {
     const found = (data.peakHours || []).find(r => r.hour === h)
-    return found ? found.count : 0
+    return found ? Math.round(found.total_seconds / 60) : 0
   })
 
   hoursChart = new Chart(hoursCtx, {
@@ -373,9 +373,9 @@ async function loadReports() {
     data: {
       labels: hours.map(h => `${String(h).padStart(2, '0')}:00`),
       datasets: [{
-        label: 'Eventos',
-        data: hourCounts,
-        backgroundColor: hourCounts.map(v => v > 0 ? '#25D366' : '#E5E7EB'),
+        label: 'Minutos',
+        data: hourMins,
+        backgroundColor: hourMins.map(v => v > 0 ? '#25D366' : '#E5E7EB'),
         borderRadius: 4
       }]
     },
@@ -383,7 +383,7 @@ async function loadReports() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        y: { beginAtZero: true, title: { display: true, text: 'Minutos' } },
         x: { ticks: { font: { size: 10 }, maxRotation: 90 } }
       }
     }
