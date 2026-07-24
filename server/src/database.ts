@@ -1,12 +1,45 @@
 // SQLite metrics store using sql.js (WASM-based, no native deps)
 
 import initSqlJs, { Database as SqlJsDatabase } from 'sql.js'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
+import { join } from 'path'
+import { fileURLToPath } from 'url'
+
+const DB_PATH = process.env.DB_PATH || join(fileURLToPath(import.meta.url), '..', '..', '..', '..', 'server', 'data', 'metrics.db')
 
 let db: SqlJsDatabase | null = null
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleSave(): void {
+  if (saveTimer) return
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    saveDatabase()
+  }, 5000)
+}
+
+function saveDatabase(): void {
+  if (!db) return
+  try {
+    const data = db.export()
+    writeFileSync(DB_PATH, Buffer.from(data))
+  } catch (err) {
+    console.error('[DB] Error saving database:', err)
+  }
+}
 
 export async function initDatabase(): Promise<void> {
   const SQL = await initSqlJs()
-  db = new SQL.Database()
+  mkdirSync(join(DB_PATH, '..'), { recursive: true })
+
+  if (existsSync(DB_PATH)) {
+    const buffer = readFileSync(DB_PATH)
+    db = new SQL.Database(buffer)
+    console.log(`[DB] Loaded existing database from ${DB_PATH}`)
+  } else {
+    db = new SQL.Database()
+    console.log(`[DB] Created new database at ${DB_PATH}`)
+  }
 
   db.run(`
     CREATE TABLE IF NOT EXISTS events (
@@ -33,7 +66,12 @@ export async function initDatabase(): Promise<void> {
   db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_agent ON chat_sessions(agent)`)
   db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_start ON chat_sessions(start_time)`)
 
-  console.log('[DB] SQLite database initialized (in-memory)')
+  // Save on exit
+  process.on('beforeExit', saveDatabase)
+  process.on('SIGINT', () => { saveDatabase(); process.exit(0) })
+  process.on('SIGTERM', () => { saveDatabase(); process.exit(0) })
+
+  console.log(`[DB] Database ready at ${DB_PATH}`)
 }
 
 function getDb(): SqlJsDatabase {
@@ -76,6 +114,7 @@ export function insertEvent(agent: string, type: EventType, detail?: string): vo
     const stmt = d.prepare('INSERT INTO events (timestamp, agent, type, detail) VALUES (?, ?, ?, ?)')
     stmt.run([Date.now(), agent, type, detail || null])
     stmt.free()
+    scheduleSave()
   } catch (err) {
     console.error('[DB] Error inserting event:', err)
   }
@@ -90,6 +129,7 @@ export function startChatSession(agent: string, contact: string): void {
     stmt.run([agent, contact, Date.now()])
     stmt.free()
     insertEvent(agent, 'chat_start', contact)
+    scheduleSave()
   } catch (err) {
     console.error('[DB] Error starting chat session:', err)
   }
@@ -114,6 +154,7 @@ export function endChatSession(agent: string): void {
       update.run([now, duration, session.id])
       update.free()
       insertEvent(agent, 'chat_end', `${session.contact}|${duration}s`)
+      scheduleSave()
     }
   } catch (err) {
     console.error('[DB] Error ending chat session:', err)
