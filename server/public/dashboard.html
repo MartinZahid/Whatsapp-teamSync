@@ -141,7 +141,7 @@ td { padding: 8px 10px; border-bottom: 1px solid #F3F4F6; }
   <div class="panel" id="panel-history">
     <div class="controls">
       <label>Últimos</label>
-      <select id="history-days"><option value="1">1 día</option><option value="3">3 días</option><option value="7" selected>7 días</option><option value="30">30 días</option></select>
+      <select id="history-days"><option value="1">Hoy</option><option value="3">3 días</option><option value="7" selected>7 días</option><option value="30">Un mes</option></select>
       <button class="btn btn-primary" onclick="loadHistory()">Actualizar</button>
     </div>
     <div class="card"><div id="history-content"><div class="empty">Selecciona un período y haz clic en Actualizar</div></div></div>
@@ -151,7 +151,8 @@ td { padding: 8px 10px; border-bottom: 1px solid #F3F4F6; }
   <div class="panel" id="panel-reports">
     <div class="controls">
       <label>Últimos</label>
-      <select id="report-days"><option value="1">1 día</option><option value="3">3 días</option><option value="7" selected>7 días</option><option value="30">30 días</option></select>
+      <select id="report-days"><option value="1">Hoy</option><option value="3">3 días</option><option value="7" selected>7 días</option><option value="30">Un mes</option></select>
+      <select id="report-agent"><option value="">Todos los agentes</option></select>
       <button class="btn btn-primary" onclick="loadReports()">Actualizar</button>
       <button class="btn btn-secondary" onclick="exportData()">Exportar JSON</button>
     </div>
@@ -307,16 +308,24 @@ async function loadReports() {
   const days = document.getElementById('report-days').value
   const data = await api(`/api/metrics?days=${days}`)
 
+  // Populate agent filter
+  const agentSelect = document.getElementById('report-agent')
+  const allAgents = [...new Set((data.topAgents || []).map(r => r.agent))].sort()
+  const currentFilter = agentSelect.value
+  agentSelect.innerHTML = '<option value="">Todos los agentes</option>' + allAgents.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')
+  agentSelect.value = currentFilter || ''
+
   // Top contacts table
   const topContainer = document.getElementById('top-agents-table')
-  if (!data.topAgents || data.topAgents.length === 0) {
+  const filtered = data.topAgents ? data.topAgents.filter(r => !agentSelect.value || r.agent === agentSelect.value) : []
+  if (filtered.length === 0) {
     topContainer.innerHTML = '<div class="empty">Sin datos</div>'
   } else {
     topContainer.innerHTML = `
       <table>
         <thead><tr><th>#</th><th>Agente</th><th>Contacto</th><th>Tiempo total</th></tr></thead>
         <tbody>
-          ${data.topAgents.map((r, i) => `
+          ${filtered.map((r, i) => `
             <tr><td>${i + 1}</td><td>${escapeHtml(r.agent)}</td><td>${escapeHtml(r.contact)}</td><td>${formatDur(r.total_seconds)}</td></tr>
           `).join('')}
         </tbody>
@@ -411,6 +420,9 @@ function loadManagement() {
   ).join('')
 }
 loadManagement()
+
+// Agent filter triggers reload
+document.getElementById('report-agent').addEventListener('change', loadReports)
 </script>
 </body>
 </html>
