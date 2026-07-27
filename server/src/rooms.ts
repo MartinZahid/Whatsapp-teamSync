@@ -212,6 +212,13 @@ export class RoomManager {
     const now = Date.now()
     let changed = false
     for (const [agentId, agent] of this.agents) {
+      // End chat session if active but no activity for 5 minutes
+      if (agent.status === 'active' && now - agent.lastSeen > 300000) {
+        endChatSession(agent.name)
+        this.setStatus(agent, 'available')
+        console.log(`[Server] Inactivity timeout for ${agent.name}, chat session closed`)
+        changed = true
+      }
       // Mark as offline if no heartbeat for 60 seconds
       if (now - agent.lastSeen > 60000 && agent.status !== 'offline') {
         agent.status = 'offline'
