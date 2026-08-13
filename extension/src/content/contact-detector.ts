@@ -11,6 +11,7 @@ export class ContactDetector {
   private onContactChangeCallback: ((contact: string | null) => void) | null = null
   private lastKnownContact: string | null = null
   private waitingForDOM = false
+  private observedPanel: HTMLElement | null = null
 
   constructor() {
     this.init()
@@ -100,30 +101,57 @@ export class ContactDetector {
 
     const panel = document.querySelector(this.CONVERSATION_PANEL_SELECTOR)
     if (panel) {
+      this.observedPanel = panel
       this.observer.observe(panel, {
         childList: true,
         subtree: true,
         characterData: true
       })
-    } else {
-      this.startPollingForPanel()
     }
+    this.startPollingForPanel()
   }
 
+  // Lightweight watchdog: keeps re-anchoring the observer if the panel node
+  // is replaced by a re-render (e.g. after suspend/resume). Runs at a slow
+  // cadence, checking isConnected instead of re-wiring on every mutation.
   private startPollingForPanel(): void {
     if (this.pollingTimer) return
 
     this.pollingTimer = window.setInterval(() => {
       const panel = document.querySelector(this.CONVERSATION_PANEL_SELECTOR)
-      if (panel && this.observer) {
-        this.observer.observe(panel, {
-          childList: true,
-          subtree: true,
-          characterData: true
-        })
-        this.stopPolling()
+
+      if (!panel) {
+        // Panel truly gone — report null contact if we had one
+        if (this.currentContact) {
+          this.currentContact = null
+          this.lastKnownContact = null
+          this.onContactChangeCallback?.(null)
+        }
+        return
       }
-    }, 500)
+
+      if (this.observer) {
+        // Re-anchor observer if it is observing a node no longer in the DOM
+        if (!this.observedPanel || !this.observedPanel.isConnected) {
+          this.observer.observe(panel, {
+            childList: true,
+            subtree: true,
+            characterData: true
+          })
+          this.observedPanel = panel
+
+          // Re-detect the current contact once the observer is re-anchored
+          const contact = this.extractContactName()
+          if (contact && contact !== this.currentContact) {
+            this.currentContact = contact
+            this.lastKnownContact = contact
+            this.onContactChangeCallback?.(contact)
+          }
+        }
+      } else {
+        this.observedPanel = panel
+      }
+    }, 2000)
   }
 
   stopObserving(): void {

@@ -16,6 +16,9 @@ export class DomObserver {
   private lastSelectedChat: HTMLElement | null = null
   private debounceTimer: number | null = null
   private isObserving = false
+  private observedChatList: HTMLElement | null = null
+  private urlObserver: MutationObserver | null = null
+  private clickHandler: ((e: Event) => void) | null = null
 
   private readonly CHAT_LIST_SELECTOR = 'div[data-testid="chat-list"]'
   private readonly CHAT_ITEM_SELECTOR = 'div[data-testid="cell-frame-container"]'
@@ -41,6 +44,7 @@ export class DomObserver {
       return
     }
 
+    this.observedChatList = chatList as HTMLElement
     this.observer = new MutationObserver((mutations) => this.handleMutations(mutations))
     this.observer.observe(chatList, {
       childList: true,
@@ -183,24 +187,42 @@ export class DomObserver {
   }
 
   private addClickListeners(chatList: HTMLElement): void {
-    chatList.addEventListener('click', (e) => {
+    if (this.clickHandler) {
+      chatList.removeEventListener('click', this.clickHandler, true)
+    }
+    this.clickHandler = (e: Event) => {
       const chatItem = (e.target as HTMLElement).closest(this.CHAT_ITEM_SELECTOR) as HTMLElement
       if (chatItem) {
         setTimeout(() => this.handleChatSelection(chatItem), 50)
       }
-    }, true)
+    }
+    chatList.addEventListener('click', this.clickHandler, true)
   }
 
   private observeUrlChanges(): void {
     let lastUrl = location.href
-    new MutationObserver(() => {
-      if (location.href !== lastUrl) {
+
+    if (this.urlObserver) {
+      this.urlObserver.disconnect()
+      this.urlObserver = null
+    }
+
+    this.urlObserver = new MutationObserver(() => {
+      // Re-anchor the observer if the chat list node was replaced by a re-render
+      const chatListReplaced = this.observedChatList && !this.observedChatList.isConnected
+
+      if (location.href !== lastUrl || chatListReplaced) {
         lastUrl = location.href
-        console.log('[WTS] URL changed, re-initializing observer')
+        console.log(
+          chatListReplaced
+            ? '[WTS] Chat list re-rendered, re-initializing observer'
+            : '[WTS] URL changed, re-initializing observer'
+        )
         this.stopObserving()
         setTimeout(() => this.startObserving(), 500)
       }
-    }).observe(document, { subtree: true, childList: true })
+    })
+    this.urlObserver.observe(document, { subtree: true, childList: true })
   }
 
   public restart(): void {
@@ -221,6 +243,11 @@ export class DomObserver {
       clearTimeout(this.deselectionTimer)
       this.deselectionTimer = null
     }
+    if (this.clickHandler && this.observedChatList) {
+      this.observedChatList.removeEventListener('click', this.clickHandler, true)
+      this.clickHandler = null
+    }
+    this.observedChatList = null
     this.isObserving = false
   }
 

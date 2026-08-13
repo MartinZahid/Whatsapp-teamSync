@@ -34,9 +34,30 @@ class WhatsAppTeamSync {
     await this.waitForWhatsAppReady()
 
     this.setupEventListeners()
+    this.setupResumeListeners()
     this.notifyBackgroundReady()
 
     this.requestAgentName()
+  }
+
+  // When the tab resumes (e.g. after suspending the computer), WhatsApp
+  // re-renders the DOM and may replace the observed nodes. Re-anchor the
+  // observers and re-sync the current contact with the background script.
+  private setupResumeListeners(): void {
+    const onResume = async (): Promise<void> => {
+      if (document.visibilityState === 'hidden') return
+
+      this.domObserver.restart()
+
+      const contact = await this.contactDetector.detectCurrentContact()
+      this.currentContact = contact
+      this.updateBackgroundContact(contact)
+
+      this.notifyBackgroundReady()
+    }
+
+    document.addEventListener('visibilitychange', () => onResume())
+    window.addEventListener('focus', () => onResume())
   }
 
   private async waitForWhatsAppReady(): Promise<void> {
