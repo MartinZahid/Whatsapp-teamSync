@@ -146,16 +146,6 @@ wss.on('connection', (ws: WebSocket) => {
     }
   })
 
-  ws.on('close', () => {
-    if (agentId) {
-      roomManager.disconnect(agentId)
-    }
-  })
-
-  ws.on('error', (error) => {
-    console.error('[Server] WebSocket error:', error)
-  })
-
   // Send ping every 30 seconds
   const pingInterval = setInterval(() => {
     if (ws.readyState === WebSocket.OPEN) {
@@ -165,8 +155,15 @@ wss.on('connection', (ws: WebSocket) => {
     }
   }, 30000)
 
+  ws.on('error', (error) => {
+    console.error('[Server] WebSocket error:', error)
+  })
+
   ws.on('close', () => {
     clearInterval(pingInterval)
+    if (agentId) {
+      roomManager.disconnect(agentId)
+    }
   })
 })
 

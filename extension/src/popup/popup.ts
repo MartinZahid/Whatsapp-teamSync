@@ -1,11 +1,10 @@
 import './popup.css'
+import type { AgentConfig } from '@shared/types.js'
 
 const DEFAULT_SERVER_URL = 'ws://localhost:3001'
 const AGENT_LIST_KEY = 'wts_agent_list'
 const CONFIG_KEY = 'wts_agent_config'
 const DEFAULT_AGENTS = ['Agente 1', 'Agente 2', 'Agente 3']
-
-interface AgentConfig { agentName: string; serverUrl: string }
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement
 const qs = <T extends HTMLElement>(sel: string, parent?: HTMLElement) => (parent || document).querySelector<T>(sel)

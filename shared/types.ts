@@ -2,6 +2,11 @@
 
 export type AgentStatus = 'active' | 'paused' | 'available' | 'offline'
 
+export interface AgentConfig {
+  agentName: string
+  serverUrl: string
+}
+
 export interface Agent {
   id: string
   name: string

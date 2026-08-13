@@ -1,15 +1,10 @@
 // Content script entry point - Initializes all components
 
-import type { Agent, AgentStatus } from '@shared/types.js'
+import type { Agent, AgentConfig, AgentStatus } from '@shared/types.js'
 import './styles.css'
 import { DomObserver } from './dom-observer'
 import { ContactDetector } from './contact-detector'
 import { FloatingPanel } from './floating-panel'
-
-interface AgentConfig {
-  agentName: string
-  serverUrl: string
-}
 
 type ContentBackgroundMessage =
   | { type: 'PRESENCE_UPDATE'; agents: Agent[] }

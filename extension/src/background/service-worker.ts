@@ -1,12 +1,7 @@
 // Background Service Worker - WebSocket connection and agent presence management
 
-import type { Agent, AgentStatus, ClientToServerMessage, ServerToClientMessage } from '@shared/types.js'
+import type { Agent, AgentConfig, AgentStatus, ClientToServerMessage, ServerToClientMessage } from '@shared/types.js'
 import { getStatusColor, getStatusLabel } from '@shared/types.js'
-
-interface AgentConfig {
-  agentName: string
-  serverUrl: string
-}
 
 interface AgentState {
   name: string

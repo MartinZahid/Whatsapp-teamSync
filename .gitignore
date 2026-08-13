@@ -5,3 +5,7 @@ dist/
 Thumbs.db
 dist.rar
 *.ts.timestamp-*.mjs
+*.xlsx
+*.docx
+shared/types.js
+shared/types.d.ts
