@@ -61,10 +61,10 @@ function renderAgentList() {
     const colors = ['#F97316','#EF4444','#F59E0B','#3B82F6','#8B5CF6','#EC4899']
     const color = colors[agentList.indexOf(name) % colors.length]
     return `
-<div class="agent-item" data-agent="${name}">
+<div class="agent-item" data-agent="${escapeAttribute(name)}">
   <div class="agent-avatar" style="background:${color}">${initial}</div>
   <span class="agent-name">${escapeHtml(name)}</span>
-  <button class="agent-delete-btn" data-agent="${name}" title="Eliminar">
+  <button class="agent-delete-btn" data-agent="${escapeAttribute(name)}" title="Eliminar">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
@@ -112,6 +112,10 @@ function escapeHtml(text: string): string {
   const d = document.createElement('div')
   d.textContent = text
   return d.innerHTML
+}
+
+function escapeAttribute(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 }
 
 // --- Init ---

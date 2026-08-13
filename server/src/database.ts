@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 
-const DB_PATH = process.env.DB_PATH || join(fileURLToPath(import.meta.url), '..', '..', '..', '..', 'server', 'data', 'metrics.db')
+const DB_PATH = process.env.DB_PATH || join(fileURLToPath(import.meta.url), '..', '..', '..', '..', 'data', 'metrics.db')
 
 let db: SqlJsDatabase | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -18,7 +18,7 @@ function scheduleSave(): void {
   }, 5000)
 }
 
-function saveDatabase(): void {
+export function saveDatabase(): void {
   if (!db) return
   try {
     const data = db.export()
@@ -65,11 +65,6 @@ export async function initDatabase(): Promise<void> {
   `)
   db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_agent ON chat_sessions(agent)`)
   db.run(`CREATE INDEX IF NOT EXISTS idx_sessions_start ON chat_sessions(start_time)`)
-
-  // Save on exit
-  process.on('beforeExit', saveDatabase)
-  process.on('SIGINT', () => { saveDatabase(); process.exit(0) })
-  process.on('SIGTERM', () => { saveDatabase(); process.exit(0) })
 
   console.log(`[DB] Database ready at ${DB_PATH}`)
 }

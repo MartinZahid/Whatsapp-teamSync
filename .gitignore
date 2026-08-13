@@ -5,4 +5,3 @@ dist/
 Thumbs.db
 dist.rar
 *.ts.timestamp-*.mjs
-server/server/

@@ -5,7 +5,7 @@ import { createServer, IncomingMessage, ServerResponse } from 'http'
 import { readFileSync, existsSync } from 'fs'
 import { join, extname } from 'path'
 import { RoomManager } from './rooms.js'
-import { initDatabase, insertEvent, queryDailyStats, queryPeakHours, queryTopAgents, querySessions, exportJSON } from './database.js'
+import { initDatabase, saveDatabase, insertEvent, queryDailyStats, queryPeakHours, queryTopAgents, querySessions, exportJSON } from './database.js'
 import { WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, ErrorMessage } from './types.js'
 import { fileURLToPath } from 'url'
 
@@ -177,6 +177,7 @@ wss.on('error', (error) => {
 // Graceful shutdown
 function shutdown() {
   console.log('[Server] Shutting down...')
+  saveDatabase()
   wss.close(() => httpServer.close(() => {
     console.log('[Server] Server closed')
     process.exit(0)

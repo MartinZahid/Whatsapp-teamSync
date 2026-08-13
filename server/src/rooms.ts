@@ -28,6 +28,10 @@ export class RoomManager {
 
   // Register a new agent connection
   register(ws: import('ws').WebSocket, name: string): string {
+    if (name.length > MAX_NAME_LENGTH) {
+      console.warn(`[Server] Agent name too long (${name.length}), truncating`)
+      name = name.slice(0, MAX_NAME_LENGTH)
+    }
     // Check if agent with same name already exists
     const existingAgent = Array.from(this.agents.values()).find(a => a.name === name)
     if (existingAgent) {

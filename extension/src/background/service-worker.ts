@@ -24,7 +24,6 @@ type RuntimeMessage =
   | { type: 'ATTENDING'; contact: string }
   | { type: 'PAUSED' }
   | { type: 'RESUMED' }
-  | { type: 'AVAILABLE' }
   | { type: 'CONTACT_CHANGED'; contact: string | null }
   | { type: 'UPDATE_SERVER_URL'; url: string }
   | { type: 'GET_AGENTS' }
@@ -237,14 +236,7 @@ class BackgroundManager {
 
       const contact = agent.contact || existing.contact || null
       const helpRequested = agent.helpRequested ?? existing.helpRequested
-      let chatStartTime = existing.chatStartTime
-      if (agent.status === 'active' && contact) {
-        if (!chatStartTime || contact !== existing.contact) {
-          chatStartTime = now
-        }
-      } else if (agent.status !== 'active') {
-        chatStartTime = undefined
-      }
+      const chatStartTime = this.computeChatStartTime(agent.status, contact, existing.contact, existing.chatStartTime, now)
 
       this.agents.set(agent.name, {
         ...existing,
@@ -263,20 +255,9 @@ class BackgroundManager {
       }
     }
 
-    const agentsArray: Agent[] = Array.from(this.agents.values()).map(a => ({
-      id: a.name,
-      name: a.name,
-      status: a.status,
-      contact: a.contact,
-      color: a.color,
-      lastSeen: a.lastSeen,
-      chatStartTime: a.chatStartTime,
-      helpRequested: a.helpRequested
-    }))
-
     this.broadcastToContent({
       type: 'PRESENCE_UPDATE',
-      agents: agentsArray
+      agents: this.getAllAgents()
     })
   }
 
@@ -309,11 +290,6 @@ class BackgroundManager {
 
       case 'RESUMED':
         this.handleResume()
-        sendResponse({ success: true })
-        break
-
-      case 'AVAILABLE':
-        this.handleAvailable()
         sendResponse({ success: true })
         break
 
@@ -428,16 +404,6 @@ class BackgroundManager {
     this.broadcastStatus('available')
   }
 
-  private handleAvailable(): void {
-    const agentName = this.config?.agentName
-    if (!agentName) return
-
-    this.updateAndBroadcast(
-      { status: 'available', contact: null },
-      { type: 'AVAILABLE', agent: agentName }
-    )
-  }
-
   private handleContactChanged(contact: string | null): void {
     const agentName = this.config?.agentName
     if (!agentName) return
@@ -495,20 +461,26 @@ class BackgroundManager {
     }
   }
 
+  private computeChatStartTime(
+    status: AgentStatus,
+    contact: string | null,
+    previousContact: string | null | undefined,
+    previousChatStartTime: number | undefined,
+    now: number
+  ): number | undefined {
+    if (status === 'active' && contact) {
+      return (!previousChatStartTime || contact !== previousContact) ? now : previousChatStartTime
+    }
+    if (status !== 'active') return undefined
+    return previousChatStartTime
+  }
+
   private updateAgentState(name: string, updates: Partial<AgentState>): void {
     const agent = this.agents.get(name)
     const now = Date.now()
     const newStatus = updates.status ?? agent?.status
     const newContact: string | null = 'contact' in updates ? (updates.contact ?? null) : (agent?.contact ?? null)
-
-    let chatStartTime = agent?.chatStartTime
-    if (newStatus === 'active' && newContact) {
-      if (!chatStartTime || newContact !== agent?.contact) {
-        chatStartTime = now
-      }
-    } else if (newStatus !== 'active') {
-      chatStartTime = undefined
-    }
+    const chatStartTime = this.computeChatStartTime(newStatus, newContact, agent?.contact, agent?.chatStartTime, now)
 
     if (agent) {
       this.agents.set(name, { ...agent, ...updates, chatStartTime, lastSeen: now })
