@@ -125,6 +125,12 @@ export function insertEvent(agent: string, type: EventType, detail?: string): vo
 export function startChatSession(agent: string, contact: string): void {
   try {
     const d = getDb()
+    const open = d.prepare('SELECT id FROM chat_sessions WHERE agent = ? AND contact = ? AND end_time IS NULL LIMIT 1')
+    open.bind([agent, contact])
+    const hasOpen = open.step()
+    open.free()
+    if (hasOpen) return
+
     const stmt = d.prepare('INSERT INTO chat_sessions (agent, contact, start_time) VALUES (?, ?, ?)')
     stmt.run([agent, contact, Date.now()])
     stmt.free()
@@ -139,23 +145,22 @@ export function endChatSession(agent: string): void {
   try {
     const d = getDb()
     const now = Date.now()
-    // Find the latest open session for this agent
-    const stmt = d.prepare('SELECT id, start_time, contact FROM chat_sessions WHERE agent = ? AND end_time IS NULL ORDER BY start_time DESC LIMIT 1')
+    const stmt = d.prepare('SELECT id, start_time, contact FROM chat_sessions WHERE agent = ? AND end_time IS NULL')
     stmt.bind([agent])
-    let session: { id: number; start_time: number; contact: string } | null = null
-    if (stmt.step()) {
-      session = stmt.getAsObject() as { id: number; start_time: number; contact: string }
+    const sessions: Array<{ id: number; start_time: number; contact: string }> = []
+    while (stmt.step()) {
+      sessions.push(stmt.getAsObject() as { id: number; start_time: number; contact: string })
     }
     stmt.free()
 
-    if (session) {
+    for (const session of sessions) {
       const duration = Math.round((now - session.start_time) / 1000)
       const update = d.prepare('UPDATE chat_sessions SET end_time = ?, duration_seconds = ? WHERE id = ?')
       update.run([now, duration, session.id])
       update.free()
       insertEvent(agent, 'chat_end', `${session.contact}|${duration}s`)
-      scheduleSave()
     }
+    if (sessions.length) scheduleSave()
   } catch (err) {
     console.error('[DB] Error ending chat session:', err)
   }

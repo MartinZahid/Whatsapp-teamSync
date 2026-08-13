@@ -115,9 +115,10 @@ export class RoomManager {
     agent.lastSeen = now
 
     if (isAttendingMessage(message)) {
-      if (agent.status === 'active' && agent.contact && agent.contact !== message.contact) endChatSession(agent.name)
+      const contactChanged = agent.contact !== message.contact
+      if (agent.status === 'active' && contactChanged) endChatSession(agent.name)
       this.setStatus(agent, 'active', message.contact)
-      startChatSession(agent.name, message.contact)
+      if (contactChanged) startChatSession(agent.name, message.contact)
       console.log(`[Server] ${agent.name} attending to: ${message.contact}`)
     } else if (isPausedMessage(message)) {
       this.setStatus(agent, 'paused')

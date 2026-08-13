@@ -71,9 +71,9 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
   }
 
   // Serve static files from server/public/
-  let filePath = join(__dirname, '..', 'public', path === '/' ? 'dashboard.html' : path)
+  let filePath = join(__dirname, '..', '..', '..', 'public', path === '/' ? 'dashboard.html' : path)
   if (!existsSync(filePath)) {
-    filePath = join(__dirname, '..', 'public', 'dashboard.html')
+    filePath = join(__dirname, '..', '..', '..', 'public', 'dashboard.html')
   }
 
   try {
