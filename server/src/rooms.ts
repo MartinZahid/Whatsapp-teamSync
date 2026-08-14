@@ -3,6 +3,7 @@
 import { WebSocket } from 'ws'
 import { Agent, AgentStatus, WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, isDeleteAgentMessage, isHeartbeatMessage, isHelpRequestMessage, STATUS_COLORS, PresenceUpdate } from './types.js'
 import { insertEvent, startChatSession, endChatSession } from './database.js'
+import { APP_VERSION } from '../../shared/version.js'
 
 interface ClientConnection {
   ws: import('ws').WebSocket
@@ -206,7 +207,7 @@ export class RoomManager {
 
     const message = {
       type: 'SERVER_INFO',
-      version: '1.0.0',
+      version: APP_VERSION,
       agents: this.getAllAgents()
     }
 

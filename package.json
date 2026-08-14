@@ -1,9 +1,10 @@
 {
   "name": "whatsapp-team-sync",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "WhatsApp Web collaborative extension for customer service teams",
   "type": "module",
   "scripts": {
+    "prebuild": "npm run version:sync",
     "dev": "vite build --watch --mode development",
     "build": "npm run build:main && npm run build:content",
     "build:main": "vite build --mode production",
@@ -11,7 +12,8 @@
     "server": "node server/dist/server/src/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "postinstall": "npm run build:server",
-    "build:server": "tsc -p server/tsconfig.json"
+    "build:server": "tsc -p server/tsconfig.json",
+    "version:sync": "node scripts/sync-version.mjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

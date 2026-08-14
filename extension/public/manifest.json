@@ -1,6 +1,6 @@
 {
   "name": "WhatsApp Team Sync",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Colaboración en tiempo real para equipos de WhatsApp Web",
   "manifest_version": 3,
   "icons": {
@@ -23,8 +23,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://web.whatsapp.com/*"],
-      "js": ["content/index.js"],
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": [
+        "content/index.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
     }
@@ -39,8 +43,12 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.png"],
-      "matches": ["https://web.whatsapp.com/*"]
+      "resources": [
+        "icons/*.png"
+      ],
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ]
     }
   ]
 }

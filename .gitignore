@@ -4,6 +4,7 @@ dist/
 .DS_Store
 Thumbs.db
 dist.rar
+dist.zip
 *.ts.timestamp-*.mjs
 *.xlsx
 *.docx

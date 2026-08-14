@@ -7,6 +7,7 @@ import { join, extname } from 'path'
 import { RoomManager } from './rooms.js'
 import { initDatabase, saveDatabase, insertEvent, queryDailyStats, queryPeakHours, queryTopAgents, querySessions, exportJSON } from './database.js'
 import { WSMessage, isAttendingMessage, isPausedMessage, isAvailableMessage, isOfflineMessage, ErrorMessage } from './types.js'
+import { APP_VERSION } from '../../shared/version.js'
 import { fileURLToPath } from 'url'
 
 const PORT = Number(process.env.PORT) || 3001
@@ -105,7 +106,7 @@ wss.on('connection', (ws: WebSocket) => {
   ws.send(JSON.stringify({
     type: 'WELCOME',
     message: 'Connected to WhatsApp Team Sync server',
-    protocol: '1.0.0'
+    protocol: APP_VERSION
   }))
 
   ws.on('message', (data: Buffer) => {
