@@ -13,6 +13,7 @@ interface ClientConnection {
 const MAX_NAME_LENGTH = 50
 const MAX_CONTACT_LENGTH = 200
 const MAX_MESSAGE_RATE = 20 // messages per second per connection
+const HEARTBEAT_TIMEOUT_MS = 60000 // mark offline if no heartbeat for 60s
 const STALE_OFFLINE_MS = 300000 // 5 min, then delete agent entirely
 
 export class RoomManager {
@@ -218,7 +219,7 @@ export class RoomManager {
     let changed = false
     for (const [agentId, agent] of this.agents) {
       // Mark as offline if no heartbeat for 60 seconds
-      if (now - agent.lastSeen > 60000 && agent.status !== 'offline') {
+      if (now - agent.lastSeen > HEARTBEAT_TIMEOUT_MS && agent.status !== 'offline') {
         agent.status = 'offline'
         agent.color = STATUS_COLORS.offline
         agent.helpRequested = undefined

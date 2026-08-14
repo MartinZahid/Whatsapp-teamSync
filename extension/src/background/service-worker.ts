@@ -561,11 +561,7 @@ class BackgroundManager {
       if (this.config && this.config.agentName !== agentName) {
         const oldName = this.config.agentName
         this.send({ type: 'DELETE_AGENT', agent: oldName })
-        this.agents.forEach((agent, id) => {
-          if (agent.name === oldName) {
-            this.agents.delete(id)
-          }
-        })
+        this.agents.delete(oldName)
         this.isIntentionallyClosed = true
         this.disconnect()
       }

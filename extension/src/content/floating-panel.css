@@ -360,3 +360,73 @@
   border-radius: 3px;
 }
 .wts-agents::-webkit-scrollbar-thumb:hover { background: var(--wts-text-muted); }
+
+.wts-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.wts-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.wts-modal-box {
+  position: relative;
+  background: var(--wts-bg);
+  color: var(--wts-text);
+  border-radius: var(--wts-radius);
+  box-shadow: var(--wts-shadow);
+  border: 1px solid var(--wts-border);
+  padding: 20px;
+  width: 280px;
+  max-width: 90vw;
+}
+
+.wts-modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.wts-modal-message {
+  font-size: 13px;
+  color: var(--wts-text-muted);
+  margin-bottom: 16px;
+  word-break: break-word;
+}
+
+.wts-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.wts-modal-actions button {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--wts-border);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.wts-modal-cancel {
+  background: transparent;
+  color: var(--wts-text);
+}
+
+.wts-modal-confirm {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: white;
+}
+
+.wts-modal-confirm:hover { background: #DC2626; }

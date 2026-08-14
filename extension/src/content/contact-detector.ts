@@ -1,5 +1,10 @@
 // Contact Detector - Extracts contact name from active WhatsApp Web chat
 
+const TIMING = {
+  DOM_STABLE_WAIT_MS: 500,
+  PANEL_WATCHDOG_MS: 2000
+} as const
+
 export class ContactDetector {
   private readonly CONVERSATION_PANEL_SELECTOR = 'div[data-testid="conversation-panel-wrapper"]'
   private readonly CHAT_TITLE_SELECTOR = 'header span[data-testid="conversation-info-header-chat-title"]'
@@ -23,7 +28,7 @@ export class ContactDetector {
 
   async detectCurrentContact(): Promise<string | null> {
     // Wait longer for header to load after chat switch
-    await this.waitForStableDOM(500)
+    await this.waitForStableDOM(TIMING.DOM_STABLE_WAIT_MS)
     const contact = this.extractContactName()
     if (contact) {
       this.currentContact = contact
@@ -151,7 +156,7 @@ export class ContactDetector {
       } else {
         this.observedPanel = panel
       }
-    }, 2000)
+    }, TIMING.PANEL_WATCHDOG_MS)
   }
 
   stopObserving(): void {

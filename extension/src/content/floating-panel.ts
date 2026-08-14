@@ -8,6 +8,10 @@ interface AgentDisplay extends Agent {
   isCurrentUser: boolean
 }
 
+const TIMING = {
+  TIMER_TICK_MS: 1000
+} as const
+
 export class FloatingPanel {
   private shadowRoot: ShadowRoot | null = null
   private host: HTMLElement | null = null
@@ -27,6 +31,11 @@ export class FloatingPanel {
   private timerInterval: number | null = null
   private localChatTimes: Map<string, number> = new Map()
   private chatContacts: Map<string, string | null> = new Map()
+  private confirmModal: HTMLElement | null = null
+  private modalMessage: HTMLElement | null = null
+  private confirmBtn: HTMLButtonElement | null = null
+  private cancelBtn: HTMLButtonElement | null = null
+  private pendingDeleteAgent: string | null = null
 
   constructor() {
     this.init()
@@ -127,6 +136,17 @@ export class FloatingPanel {
         </svg>
         <span id="wts-badge-count">0</span>
       </button>
+      <div class="wts-modal hidden" id="wts-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="wts-modal-title">
+        <div class="wts-modal-backdrop"></div>
+        <div class="wts-modal-box">
+          <p class="wts-modal-title" id="wts-modal-title">¿Eliminar usuario?</p>
+          <p class="wts-modal-message" id="wts-modal-message"></p>
+          <div class="wts-modal-actions">
+            <button class="wts-modal-cancel" id="wts-modal-cancel">Cancelar</button>
+            <button class="wts-modal-confirm" id="wts-modal-confirm">Eliminar</button>
+          </div>
+        </div>
+      </div>
     `
 
     this.panel = this.shadowRoot.getElementById('wts-panel') as HTMLElement
@@ -137,6 +157,10 @@ export class FloatingPanel {
     this.resumeBtn = this.shadowRoot.getElementById('wts-resume-btn') as HTMLButtonElement
     this.helpBtn = this.shadowRoot.getElementById('wts-help-btn') as HTMLButtonElement
     this.cancelHelpBtn = this.shadowRoot.getElementById('wts-cancel-help-btn') as HTMLButtonElement
+    this.confirmModal = this.shadowRoot.getElementById('wts-confirm-modal') as HTMLElement
+    this.modalMessage = this.shadowRoot.getElementById('wts-modal-message') as HTMLElement
+    this.confirmBtn = this.shadowRoot.getElementById('wts-modal-confirm') as HTMLButtonElement
+    this.cancelBtn = this.shadowRoot.getElementById('wts-modal-cancel') as HTMLButtonElement
 
     // Set logo src via runtime URL (content script needs chrome.runtime.getURL)
     const logo = this.shadowRoot?.querySelector('.wts-logo') as HTMLImageElement
@@ -179,6 +203,13 @@ export class FloatingPanel {
     this.panel?.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.collapse()
     })
+
+    // Confirm modal
+    this.cancelBtn?.addEventListener('click', () => this.closeConfirmModal())
+    this.confirmBtn?.addEventListener('click', () => this.confirmDeleteAgent())
+    this.confirmModal?.addEventListener('click', (e) => {
+      if (e.target === this.confirmModal) this.closeConfirmModal()
+    })
   }
 
   private loadCollapsedState(): void {
@@ -201,11 +232,7 @@ export class FloatingPanel {
   }
 
   toggleCollapse(): void {
-    if (this.isCollapsed) {
-      this.expand()
-    } else {
-      this.collapse()
-    }
+    this.isCollapsed ? this.expand() : this.collapse()
   }
 
   private expand(): void {
@@ -249,16 +276,28 @@ export class FloatingPanel {
     const isConnected = this.serverConnected
 
     if (!agents || agents.length === 0) {
-      this.agentsList.innerHTML = `
-        <div class="wts-empty">
-          ${isConnected ? 'No hay agentes conectados' : 'Conectando al servidor...'}
-        </div>
-      `
+      this.agentsList.innerHTML = this.renderEmptyState(isConnected)
       this.updateBadgeCount(0)
       return
     }
 
     // Track chat start times locally (reliable even if server drops chatStartTime)
+    this.trackChatTimes(agents)
+
+    this.agentsList.innerHTML = agents.map((agent) => this.renderAgentItem(agent, currentAgentName)).join('')
+
+    // Add delete button listeners
+    this.attachDeleteListeners()
+
+    // Sync help button state for current user
+    this.syncHelpButton(agents, currentAgentName)
+
+    this.updateBadgeCount(agents.filter(a => a.status !== 'offline').length)
+    this.updateBadgeAlert(agents.some(a => a.helpRequested))
+    this.startTimer()
+  }
+
+  private trackChatTimes(agents: Agent[]): void {
     for (const agent of agents) {
       const prevContact = this.chatContacts.get(agent.name)
       if (agent.status === 'active' && agent.contact) {
@@ -271,60 +310,70 @@ export class FloatingPanel {
         this.chatContacts.delete(agent.name)
       }
     }
+  }
 
-    this.agentsList.innerHTML = agents.map((agent) => {
-      const isCurrentUser = agent.name === currentAgentName
-      const statusClass = getStatusClass(agent.status)
-      const contactHtml = agent.contact
-        ? `<span class="wts-agent-contact ${agent.status === 'paused' ? 'paused' : ''}">${this.escapeHtml(agent.contact)}</span>`
-        : agent.status === 'available'
-          ? `<span class="wts-agent-contact available">Disponible</span>`
-          : ''
+  private renderEmptyState(isConnected: boolean): string {
+    return `
+      <div class="wts-empty">
+        ${isConnected ? 'No hay agentes conectados' : 'Conectando al servidor...'}
+      </div>
+    `
+  }
 
-      const chatStartTime = this.localChatTimes.get(agent.name)
-      const timerHtml = agent.status === 'active' && agent.contact && chatStartTime
-        ? `<span class="wts-agent-timer" data-start="${chatStartTime}">${this.formatElapsed(chatStartTime)}</span>`
+  private renderAgentItem(agent: Agent, currentAgentName: string | null): string {
+    const isCurrentUser = agent.name === currentAgentName
+    const statusClass = getStatusClass(agent.status)
+    const contactHtml = agent.contact
+      ? `<span class="wts-agent-contact ${agent.status === 'paused' ? 'paused' : ''}">${this.escapeHtml(agent.contact)}</span>`
+      : agent.status === 'available'
+        ? `<span class="wts-agent-contact available">Disponible</span>`
         : ''
 
-      const helpClass = agent.helpRequested ? ' help-requested' : ''
-      return `
-        <div class="wts-agent ${isCurrentUser ? 'current-user' : ''}${helpClass}" data-agent="${this.escapeAttribute(agent.name)}">
-          <div class="wts-agent-avatar" style="background: ${agent.color || getStatusColor(agent.status)}">
-            ${agent.name.charAt(0).toUpperCase()}
-          </div>
-          <div class="wts-agent-info">
-            <div class="wts-agent-name">
-              <span>${this.escapeHtml(agent.name)}</span>
-              ${timerHtml}
-            </div>
-            <div class="wts-agent-status">
-              <span class="wts-status-dot ${statusClass}"></span>
-              <span>${getStatusLabel(agent.status)}</span>
-              ${contactHtml}
-            </div>
-          </div>
-          ${isCurrentUser ? `
-            <button class="wts-delete-btn" data-agent="${this.escapeAttribute(agent.name)}" title="Eliminar usuario" aria-label="Eliminar usuario">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
-          ` : ''}
-        </div>
-      `
-    }).join('')
+    const chatStartTime = this.localChatTimes.get(agent.name)
+    const timerHtml = agent.status === 'active' && agent.contact && chatStartTime
+      ? `<span class="wts-agent-timer" data-start="${chatStartTime}">${this.formatElapsed(chatStartTime)}</span>`
+      : ''
 
-    // Add delete button listeners
-    this.agentsList.querySelectorAll('.wts-delete-btn').forEach(btn => {
+    const helpClass = agent.helpRequested ? ' help-requested' : ''
+    return `
+      <div class="wts-agent ${isCurrentUser ? 'current-user' : ''}${helpClass}" data-agent="${this.escapeAttribute(agent.name)}">
+        <div class="wts-agent-avatar" style="background: ${agent.color || getStatusColor(agent.status)}">
+          ${agent.name.charAt(0).toUpperCase()}
+        </div>
+        <div class="wts-agent-info">
+          <div class="wts-agent-name">
+            <span>${this.escapeHtml(agent.name)}</span>
+            ${timerHtml}
+          </div>
+          <div class="wts-agent-status">
+            <span class="wts-status-dot ${statusClass}"></span>
+            <span>${getStatusLabel(agent.status)}</span>
+            ${contactHtml}
+          </div>
+        </div>
+        ${isCurrentUser ? `
+          <button class="wts-delete-btn" data-agent="${this.escapeAttribute(agent.name)}" title="Eliminar usuario" aria-label="Eliminar usuario">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+    `
+  }
+
+  private attachDeleteListeners(): void {
+    this.agentsList?.querySelectorAll('.wts-delete-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation()
         const agentName = (e.currentTarget as HTMLElement).dataset.agent
         if (agentName) this.deleteAgent(agentName)
       })
     })
+  }
 
-    // Sync help button state for current user
+  private syncHelpButton(agents: Agent[], currentAgentName: string | null): void {
     const currentAgent = agents.find(a => a.name === currentAgentName)
     if (currentAgent) {
       this.isHelpRequested = currentAgent.helpRequested === true
@@ -336,10 +385,6 @@ export class FloatingPanel {
         this.helpBtn?.classList.remove('hidden')
       }
     }
-
-    this.updateBadgeCount(agents.filter(a => a.status !== 'offline').length)
-    this.updateBadgeAlert(agents.some(a => a.helpRequested))
-    this.startTimer()
   }
 
   updateCurrentUserStatus(status: AgentStatus): void {
@@ -435,7 +480,7 @@ export class FloatingPanel {
         const start = parseInt((el as HTMLElement).dataset.start || '0')
         el.textContent = this.formatElapsed(start)
       })
-    }, 1000)
+    }, TIMING.TIMER_TICK_MS)
   }
 
   private stopTimer(): void {
@@ -456,7 +501,23 @@ export class FloatingPanel {
   }
 
   private deleteAgent(agentName: string): void {
-    if (!confirm(`¿Eliminar usuario "${agentName}"?`)) return
+    this.pendingDeleteAgent = agentName
+    if (this.modalMessage) {
+      this.modalMessage.textContent = `¿Eliminar usuario "${agentName}"?`
+    }
+    this.confirmModal?.classList.remove('hidden')
+    this.confirmBtn?.focus()
+  }
+
+  private closeConfirmModal(): void {
+    this.pendingDeleteAgent = null
+    this.confirmModal?.classList.add('hidden')
+  }
+
+  private confirmDeleteAgent(): void {
+    const agentName = this.pendingDeleteAgent
+    this.closeConfirmModal()
+    if (!agentName) return
     chrome.runtime.sendMessage({
       type: 'DELETE_AGENT',
       agentName

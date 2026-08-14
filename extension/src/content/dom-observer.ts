@@ -9,6 +9,16 @@ interface ChatSelectEvent {
 type ChatSelectCallback = (event: ChatSelectEvent) => void
 type ChatDeselectCallback = () => void
 
+const TIMING = {
+  RETRY_INTERVAL_MS: 1000,
+  DESELECTION_DEBOUNCE_MS: 300,
+  SELECTION_DEBOUNCE_MS: 100,
+  CLICK_DELAY_MS: 50,
+  RESTART_DELAY_MS: 500
+} as const
+
+const MAX_START_ATTEMPTS = 10
+
 export class DomObserver {
   private observer: MutationObserver | null = null
   private selectCallbacks: ChatSelectCallback[] = []
@@ -19,6 +29,7 @@ export class DomObserver {
   private observedChatList: HTMLElement | null = null
   private urlObserver: MutationObserver | null = null
   private clickHandler: ((e: Event) => void) | null = null
+  private startAttempts = 0
 
   private readonly CHAT_LIST_SELECTOR = 'div[data-testid="chat-list"]'
   private readonly CHAT_ITEM_SELECTOR = 'div[data-testid="cell-frame-container"]'
@@ -40,10 +51,16 @@ export class DomObserver {
   private startObserving(): void {
     const chatList = document.querySelector(this.CHAT_LIST_SELECTOR)
     if (!chatList) {
-      setTimeout(() => this.startObserving(), 1000)
+      this.startAttempts++
+      if (this.startAttempts > MAX_START_ATTEMPTS) {
+        console.error('[WTS] Chat list not found after', MAX_START_ATTEMPTS, 'attempts, giving up')
+        return
+      }
+      setTimeout(() => this.startObserving(), TIMING.RETRY_INTERVAL_MS)
       return
     }
 
+    this.startAttempts = 0
     this.observedChatList = chatList as HTMLElement
     this.observer = new MutationObserver((mutations) => this.handleMutations(mutations))
     this.observer.observe(chatList, {
@@ -108,7 +125,7 @@ export class DomObserver {
           this.handleChatDeselection()
         }
       }
-    }, 300)
+    }, TIMING.DESELECTION_DEBOUNCE_MS)
   }
 
   private isChatSelected(element: HTMLElement): boolean {
@@ -128,7 +145,7 @@ export class DomObserver {
     this.debounceTimer = window.setTimeout(() => {
       this.lastSelectedChat = chatElement
       this.emitChatSelected(chatElement)
-    }, 100)
+    }, TIMING.SELECTION_DEBOUNCE_MS)
   }
 
   private handleChatDeselection(): void {
@@ -193,7 +210,7 @@ export class DomObserver {
     this.clickHandler = (e: Event) => {
       const chatItem = (e.target as HTMLElement).closest(this.CHAT_ITEM_SELECTOR) as HTMLElement
       if (chatItem) {
-        setTimeout(() => this.handleChatSelection(chatItem), 50)
+        setTimeout(() => this.handleChatSelection(chatItem), TIMING.CLICK_DELAY_MS)
       }
     }
     chatList.addEventListener('click', this.clickHandler, true)
@@ -219,7 +236,7 @@ export class DomObserver {
             : '[WTS] URL changed, re-initializing observer'
         )
         this.stopObserving()
-        setTimeout(() => this.startObserving(), 500)
+        setTimeout(() => this.startObserving(), TIMING.RESTART_DELAY_MS)
       }
     })
     this.urlObserver.observe(document, { subtree: true, childList: true })
@@ -227,7 +244,7 @@ export class DomObserver {
 
   public restart(): void {
     this.stopObserving()
-    setTimeout(() => this.startObserving(), 500)
+    setTimeout(() => this.startObserving(), TIMING.RESTART_DELAY_MS)
   }
 
   public stopObserving(): void {
