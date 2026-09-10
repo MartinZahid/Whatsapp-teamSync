@@ -4,10 +4,6 @@ import type { Agent, AgentStatus } from '@shared/types.js'
 import { getStatusColor, getStatusLabel, getStatusClass } from '@shared/types.js'
 import styles from './floating-panel.css?raw'
 
-interface AgentDisplay extends Agent {
-  isCurrentUser: boolean
-}
-
 const TIMING = {
   TIMER_TICK_MS: 1000
 } as const

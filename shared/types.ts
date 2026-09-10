@@ -115,18 +115,6 @@ export function isHelpRequestMessage(msg: WSMessage): msg is HelpRequestMessage 
   return msg.type === 'HELP_REQUEST'
 }
 
-export function isPresenceUpdate(msg: WSMessage): msg is PresenceUpdate {
-  return msg.type === 'PRESENCE_UPDATE'
-}
-
-export function isServerInfo(msg: WSMessage): msg is ServerInfoMessage {
-  return msg.type === 'SERVER_INFO'
-}
-
-export function isErrorMessage(msg: WSMessage): msg is ErrorMessage {
-  return msg.type === 'ERROR'
-}
-
 // Status colors
 export const STATUS_COLORS: Record<AgentStatus, string> = {
   active: '#ef4444',      // red

@@ -20,7 +20,6 @@ const STALE_OFFLINE_MS = 300000 // 5 min, then delete agent entirely
 export class RoomManager {
   private agents = new Map<string, Agent>()
   private connections = new Map<string, ClientConnection>()
-  private messageId = 0
   private rateCounters = new Map<string, { count: number; resetAt: number }>()
 
   // Generate unique agent ID
