@@ -1,7 +1,7 @@
 // Background Service Worker - WebSocket connection and agent presence management
 
 import type { Agent, AgentConfig, AgentStatus, ClientToServerMessage, ServerToClientMessage } from '@shared/types.js'
-import { getStatusColor, getStatusLabel } from '@shared/types.js'
+import { getStatusColor } from '@shared/types.js'
 
 interface AgentState {
   name: string
@@ -374,7 +374,7 @@ class BackgroundManager {
   }
 
   private broadcastStatus(status: AgentStatus): void {
-    chrome.runtime.sendMessage({ type: 'AGENT_STATUS', status: getStatusLabel(status) }).catch(() => {})
+    chrome.runtime.sendMessage({ type: 'AGENT_STATUS', status }).catch(() => {})
   }
 
   private handlePause(): void {

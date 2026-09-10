@@ -221,9 +221,7 @@ export class RoomManager {
     for (const [agentId, agent] of this.agents) {
       // Mark as offline if no heartbeat for 60 seconds
       if (now - agent.lastSeen > HEARTBEAT_TIMEOUT_MS && agent.status !== 'offline') {
-        agent.status = 'offline'
-        agent.color = STATUS_COLORS.offline
-        agent.helpRequested = undefined
+        this.setStatus(agent, 'offline')
         console.log(`[Server] Heartbeat timeout for ${agent.name}`)
         changed = true
       }

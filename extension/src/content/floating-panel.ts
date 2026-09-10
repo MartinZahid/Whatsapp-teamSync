@@ -175,28 +175,28 @@ export class FloatingPanel {
       this.isPaused = true
       this.pauseBtn?.classList.add('hidden')
       this.resumeBtn?.classList.remove('hidden')
-      chrome.runtime.sendMessage({ type: 'PAUSED' })
+      chrome.runtime.sendMessage({ type: 'PAUSED' }).catch(() => {})
     })
 
     this.resumeBtn?.addEventListener('click', () => {
       this.isPaused = false
       this.resumeBtn?.classList.add('hidden')
       this.pauseBtn?.classList.remove('hidden')
-      chrome.runtime.sendMessage({ type: 'RESUMED' })
+      chrome.runtime.sendMessage({ type: 'RESUMED' }).catch(() => {})
     })
 
     this.helpBtn?.addEventListener('click', () => {
       this.isHelpRequested = true
       this.helpBtn?.classList.add('hidden')
       this.cancelHelpBtn?.classList.remove('hidden')
-      chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: true })
+      chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: true }).catch(() => {})
     })
 
     this.cancelHelpBtn?.addEventListener('click', () => {
       this.isHelpRequested = false
       this.cancelHelpBtn?.classList.add('hidden')
       this.helpBtn?.classList.remove('hidden')
-      chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: false })
+      chrome.runtime.sendMessage({ type: 'HELP_REQUEST', requesting: false }).catch(() => {})
     })
 
     // Keyboard support
@@ -521,6 +521,6 @@ export class FloatingPanel {
     chrome.runtime.sendMessage({
       type: 'DELETE_AGENT',
       agentName
-    })
+    }).catch(() => {})
   }
 }

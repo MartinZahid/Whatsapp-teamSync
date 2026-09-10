@@ -1,9 +1,11 @@
 import './popup.css'
-import type { AgentConfig } from '@shared/types.js'
+import type { AgentConfig, AgentStatus } from '@shared/types.js'
+import { getStatusLabel } from '@shared/types.js'
 
 const DEFAULT_SERVER_URL = 'ws://localhost:3001'
 const AGENT_LIST_KEY = 'wts_agent_list'
 const CONFIG_KEY = 'wts_agent_config'
+const SERVER_URL_KEY = 'wts_server_url'
 const DEFAULT_AGENTS = ['Agente 1', 'Agente 2', 'Agente 3']
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement
@@ -90,15 +92,18 @@ function renderAgentList() {
 }
 
 function selectAgent(name: string) {
-  currentConfig = { agentName: name, serverUrl: DEFAULT_SERVER_URL }
-  saveConfig(currentConfig)
-  $('display-name').textContent = name
-  showView('connected')
-  updateStatus(false, true)
-  updateBadge('Conectando...')
-  $('current-agent-bar').classList.remove('hidden')
-  $('action-buttons').classList.remove('hidden')
-  chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: name })
+  chrome.storage.sync.get(SERVER_URL_KEY, (result) => {
+    const serverUrl = result[SERVER_URL_KEY] || DEFAULT_SERVER_URL
+    currentConfig = { agentName: name, serverUrl }
+    saveConfig(currentConfig)
+    $('display-name').textContent = name
+    showView('connected')
+    updateStatus(false, true)
+    updateBadge('Conectando...')
+    $('current-agent-bar').classList.remove('hidden')
+    $('action-buttons').classList.remove('hidden')
+    chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: name })
+  })
 }
 
 function deleteAgent(name: string) {
@@ -182,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         break
       case 'AGENT_STATUS':
-        updateBadge(msg.status)
+        updateBadge(getStatusLabel(msg.status as AgentStatus))
         break
       case 'SERVER_DISCONNECTED':
         setServerWarning(true)

@@ -113,7 +113,7 @@ class WhatsAppTeamSync {
     chrome.runtime.sendMessage({
       type: 'CONTACT_CHANGED',
       contact
-    })
+    }).catch(() => {})
   }
 
   private handleBackgroundMessage(message: ContentBackgroundMessage): void {
@@ -123,6 +123,11 @@ class WhatsAppTeamSync {
         break
       case 'CONNECTION_STATUS':
         this.floatingPanel.updateServerStatus(message.connected)
+        if (message.connected) {
+          // Re-sync current contact on (re)connection so the server recovers
+          // the agent's active chat after a service worker restart.
+          this.updateBackgroundContact(this.currentContact)
+        }
         break
       case 'AGENT_STATUS':
         this.isPaused = message.status === 'paused'
@@ -143,11 +148,11 @@ class WhatsAppTeamSync {
     chrome.runtime.sendMessage({
       type: 'CONTENT_READY',
       url: location.href
-    })
+    }).catch(() => {})
   }
 
   private requestAgentName(): void {
-    chrome.runtime.sendMessage({ type: 'GET_AGENT_NAME' })
+    chrome.runtime.sendMessage({ type: 'GET_AGENT_NAME' }).catch(() => {})
   }
 }
 
