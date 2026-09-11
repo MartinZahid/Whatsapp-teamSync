@@ -9,7 +9,7 @@
   <div class="container">
     <h2>
       <img src="../icons/icon-48.png" alt="Logo" width="20" height="20" style="border-radius:4px">
-      WhatsApp Team Sync
+      <span>WhatsApp Team Sync</span>
     </h2>
 
     <div id="current-agent-bar" class="current-agent-bar hidden">
@@ -24,34 +24,54 @@
     </div>
 
     <div id="setup-view">
-      <p class="section-title">Selecciona tu agente</p>
-
-      <div id="agent-list" class="agent-list">
-        <!-- Agent items rendered by JS -->
-      </div>
-
-      <button id="add-agent-btn" class="btn btn-add">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Añadir agente
-      </button>
-
-      <div id="add-agent-form" class="add-form hidden">
-        <input type="text" id="new-agent-input" placeholder="Nombre del nuevo agente" maxlength="30" autocomplete="off">
-        <div class="add-form-actions">
-          <button id="confirm-add-btn" class="btn btn-sm btn-primary">Añadir</button>
-          <button id="cancel-add-btn" class="btn btn-sm btn-secondary">Cancelar</button>
+      <section class="setup-card">
+        <div class="card-heading">
+          <div>
+            <p class="card-title">Servidor</p>
+            <p class="card-description">Configura dónde conectar la extensión</p>
+          </div>
+          <span class="card-icon">↗</span>
         </div>
-      </div>
+        <div class="setup-form">
+          <label for="server-url">URL del servidor</label>
+          <input type="text" id="server-url" placeholder="wss://tu-servidor.com" autocomplete="url">
+          <small>Usa ws:// o wss://</small>
+        </div>
+        <button id="test-connection-btn" class="btn btn-secondary btn-full">Probar conexión</button>
+        <div id="connection-result" class="connection-result hidden"></div>
+      </section>
 
-      <div class="divider"><span>o</span></div>
+      <section class="setup-card">
+        <div class="card-heading">
+          <div>
+            <p class="card-title">Agente</p>
+            <p class="card-description">El nombre que verá tu equipo</p>
+          </div>
+          <span class="card-icon">●</span>
+        </div>
 
-      <div class="custom-name-row">
-        <input type="text" id="custom-name-input" placeholder="Escribe un nombre personalizado..." maxlength="30" autocomplete="off">
-        <button id="connect-custom-btn" class="btn btn-primary btn-sm">Conectar</button>
-      </div>
+        <div class="custom-name-row">
+          <input type="text" id="custom-name-input" placeholder="Ej. Carlos" maxlength="30" autocomplete="off">
+          <button id="connect-custom-btn" class="btn btn-primary btn-sm">Guardar</button>
+        </div>
+
+        <details class="saved-agents">
+          <summary>Usar un agente guardado</summary>
+          <div id="agent-list" class="agent-list">
+            <!-- Agent items rendered by JS -->
+          </div>
+          <button id="add-agent-btn" class="btn btn-add">+ Añadir agente guardado</button>
+          <div id="add-agent-form" class="add-form hidden">
+            <input type="text" id="new-agent-input" placeholder="Nombre del agente" maxlength="30" autocomplete="off">
+            <div class="add-form-actions">
+              <button id="confirm-add-btn" class="btn btn-sm btn-primary">Añadir</button>
+              <button id="cancel-add-btn" class="btn btn-sm btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <div id="setup-result" class="setup-result hidden"></div>
     </div>
 
     <div class="action-buttons" id="action-buttons">

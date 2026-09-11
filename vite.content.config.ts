@@ -20,7 +20,6 @@ function copyDir(src: string, dest: string) {
 function copyHtmlEntryFiles() {
   const entries = [
     { src: 'extension/src/popup/popup.html', dest: 'dist/popup/popup.html' },
-    { src: 'extension/src/options/options.html', dest: 'dist/options/options.html' },
     { src: 'extension/src/content/index.html', dest: 'dist/content/index.html' },
     { src: 'extension/src/background/index.html', dest: 'dist/background/index.html' }
   ]

@@ -1,3 +1,3 @@
 // Synced from package.json by scripts/sync-version.mjs
 
-export const APP_VERSION = '1.1.2'
+export const APP_VERSION = '1.2.1'

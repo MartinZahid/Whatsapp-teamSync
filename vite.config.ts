@@ -20,7 +20,6 @@ function copyDir(src: string, dest: string) {
 function copyHtmlEntryFiles() {
   const entries = [
     { src: 'extension/src/popup/popup.html', dest: 'dist/popup/popup.html' },
-    { src: 'extension/src/options/options.html', dest: 'dist/options/options.html' },
     { src: 'extension/src/content/index.html', dest: 'dist/content/index.html' },
     { src: 'extension/src/background/index.html', dest: 'dist/background/index.html' }
   ]
@@ -37,9 +36,6 @@ function copyCssToFolders() {
   if (existsSync('dist/styles/popup.css')) {
     copyFileSync('dist/styles/popup.css', 'dist/popup/popup.css')
   }
-  if (existsSync('dist/styles/options.css')) {
-    copyFileSync('dist/styles/options.css', 'dist/options/options.css')
-  }
 }
 
 export default defineConfig({
@@ -52,7 +48,6 @@ export default defineConfig({
       input: {
         'background/service-worker': 'extension/src/background/service-worker.ts',
         'popup/popup': 'extension/src/popup/popup.ts',
-        'options/options': 'extension/src/options/options.ts'
       },
       output: {
         entryFileNames: '[name].js',

@@ -30,6 +30,53 @@ async function loadAgentList(): Promise<string[]> {
 }
 function saveAgentList(list: string[]) { chrome.storage.local.set({ [AGENT_LIST_KEY]: list }) }
 
+function showSetupResult(type: 'info' | 'success' | 'error', message: string): void {
+  const result = $('setup-result')
+  result.className = `setup-result ${type}`
+  result.textContent = message
+}
+
+function clearSetupResult(): void {
+  $('setup-result').className = 'setup-result hidden'
+}
+
+function showConnectionResult(type: 'info' | 'success' | 'error', message: string): void {
+  const result = $('connection-result')
+  result.className = `connection-result ${type}`
+  result.textContent = message
+}
+
+function isValidServerUrl(url: string): boolean {
+  return url.startsWith('ws://') || url.startsWith('wss://')
+}
+
+function testWebSocket(url: string): Promise<boolean> {
+  return new Promise(resolve => {
+    let ws: WebSocket
+    try {
+      ws = new WebSocket(url)
+    } catch {
+      resolve(false)
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      ws.close()
+      resolve(false)
+    }, 5000)
+
+    ws.onopen = () => {
+      window.clearTimeout(timeout)
+      ws.close()
+      resolve(true)
+    }
+    ws.onerror = () => {
+      window.clearTimeout(timeout)
+      resolve(false)
+    }
+  })
+}
+
 // --- Views ---
 function showView(v: 'setup' | 'connected') {
   $('setup-view').classList.toggle('hidden', v !== 'setup')
@@ -91,19 +138,66 @@ function renderAgentList() {
   })
 }
 
-function selectAgent(name: string) {
-  chrome.storage.sync.get(SERVER_URL_KEY, (result) => {
-    const serverUrl = result[SERVER_URL_KEY] || DEFAULT_SERVER_URL
-    currentConfig = { agentName: name, serverUrl }
-    saveConfig(currentConfig)
-    $('display-name').textContent = name
-    showView('connected')
-    updateStatus(false, true)
-    updateBadge('Conectando...')
-    $('current-agent-bar').classList.remove('hidden')
-    $('action-buttons').classList.remove('hidden')
-    chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: name })
-  })
+async function selectAgent(name: string): Promise<void> {
+  const serverUrlInput = $('server-url') as HTMLInputElement
+  const serverUrl = serverUrlInput.value.trim()
+
+  if (!serverUrl) {
+    showSetupResult('error', 'Ingresa la URL del servidor')
+    serverUrlInput.focus()
+    return
+  }
+  if (!isValidServerUrl(serverUrl)) {
+    showSetupResult('error', 'La URL debe comenzar con ws:// o wss://')
+    serverUrlInput.focus()
+    return
+  }
+
+  const connectButton = $('connect-custom-btn') as HTMLButtonElement
+  connectButton.disabled = true
+  showSetupResult('info', 'Probando conexión...')
+
+  if (!(await testWebSocket(serverUrl))) {
+    connectButton.disabled = false
+    showSetupResult('error', 'No se pudo conectar al servidor')
+    return
+  }
+
+  await chrome.storage.sync.set({ [SERVER_URL_KEY]: serverUrl })
+  currentConfig = { agentName: name, serverUrl }
+  saveConfig(currentConfig)
+  $('display-name').textContent = name
+  showView('connected')
+  updateStatus(false, true)
+  updateBadge('Conectando...')
+  $('current-agent-bar').classList.remove('hidden')
+  $('action-buttons').classList.remove('hidden')
+  chrome.runtime.sendMessage({ type: 'UPDATE_SERVER_URL', url: serverUrl }).catch(() => {})
+  chrome.runtime.sendMessage({ type: 'POPUP_READY', agentName: name }).catch(() => {})
+  connectButton.disabled = false
+}
+
+async function testCurrentConnection(): Promise<void> {
+  const input = $('server-url') as HTMLInputElement
+  const url = input.value.trim()
+
+  if (!url) {
+    showConnectionResult('error', 'Ingresa la URL del servidor')
+    input.focus()
+    return
+  }
+  if (!isValidServerUrl(url)) {
+    showConnectionResult('error', 'La URL debe comenzar con ws:// o wss://')
+    input.focus()
+    return
+  }
+
+  const button = $('test-connection-btn') as HTMLButtonElement
+  button.disabled = true
+  showConnectionResult('info', 'Probando conexión...')
+  const connected = await testWebSocket(url)
+  button.disabled = false
+  showConnectionResult(connected ? 'success' : 'error', connected ? 'Conexión exitosa' : 'No se pudo conectar al servidor')
 }
 
 function deleteAgent(name: string) {
@@ -126,6 +220,9 @@ function escapeAttribute(text: string): string {
 async function init() {
   currentConfig = await loadConfig()
   agentList = await loadAgentList()
+  const serverResult = await chrome.storage.sync.get(SERVER_URL_KEY)
+  ;($('server-url') as HTMLInputElement).value = serverResult[SERVER_URL_KEY] || currentConfig?.serverUrl || DEFAULT_SERVER_URL
+  ;($('custom-name-input') as HTMLInputElement).value = currentConfig?.agentName || ''
 
   if (currentConfig?.agentName) {
     $('display-name').textContent = currentConfig.agentName
@@ -238,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('connect-custom-btn').addEventListener('click', () => {
     const name = ($('custom-name-input') as HTMLInputElement).value.trim()
     if (name) selectAgent(name)
+    else showSetupResult('error', 'Ingresa el nombre del agente')
   })
   $('custom-name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') ($('connect-custom-btn') as HTMLButtonElement).click()
@@ -245,9 +343,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Connected view actions
   $('change-agent-btn').addEventListener('click', () => {
+    if (currentConfig) {
+      ;($('server-url') as HTMLInputElement).value = currentConfig.serverUrl
+      ;($('custom-name-input') as HTMLInputElement).value = currentConfig.agentName
+    }
+    clearSetupResult()
     renderAgentList()
     showView('setup')
   })
+  $('test-connection-btn').addEventListener('click', testCurrentConnection)
 
   $('pause-btn').addEventListener('click', () => {
     isPaused = true
