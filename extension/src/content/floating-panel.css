@@ -20,23 +20,26 @@
   --wts-danger: #DC2626;
   --wts-danger-hover: #B91C1C;
   --wts-danger-tint: rgba(239, 68, 68, 0.1);
-  --wts-danger-soft: #FEF2F2;
-  --wts-danger-soft-2: #FEE2E2;
-  --wts-danger-soft-2-hover: #FECACA;
+  --wts-danger-soft: rgba(239, 68, 68, 0.12);
+  --wts-danger-soft-2: rgba(239, 68, 68, 0.18);
+  --wts-danger-soft-2-hover: rgba(239, 68, 68, 0.28);
   --wts-danger-strong: #991B1B;
   --wts-danger-border: #FECACA;
-  --wts-warning-soft: #FEF3C7;
+  --wts-warning-soft: rgba(245, 158, 11, 0.15);
   --wts-warning-strong: #9A3412;
-  --wts-warning-bg: #FED7AA;
-  --wts-warning-bg-hover: #FDBA74;
-  --wts-success-soft: #F0FDF4;
+  --wts-warning-bg: rgba(245, 158, 11, 0.22);
+  --wts-warning-bg-hover: rgba(245, 158, 11, 0.32);
+  --wts-success-soft: rgba(34, 197, 94, 0.15);
   --wts-success-border: #86EFAC;
   --wts-success-text: #166534;
-  --wts-hover: #F3F4F6;
-  --wts-row-active: #F0FDF4;
-  --wts-row-help: #FEF2F2;
+  --wts-hover: rgba(15, 23, 42, 0.06);
+  --wts-row-active: rgba(37, 211, 102, 0.16);
+  --wts-row-help: rgba(239, 68, 68, 0.12);
   --wts-current-tag: #25D366;
   --wts-header-gradient: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  --wts-header-glass: linear-gradient(135deg, rgba(37, 211, 102, 0.9) 0%, rgba(18, 140, 126, 0.9) 100%);
+  --wts-panel-bg: rgba(255, 255, 255, 0.7);
+  --wts-panel-blur: 14px;
   --wts-backdrop: rgba(0, 0, 0, 0.4);
   --wts-lock-backdrop: rgba(0, 0, 0, 0.55);
 }
@@ -49,23 +52,25 @@
   --wts-border: #374151;
   --wts-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
   --wts-danger-tint: rgba(239, 68, 68, 0.2);
-  --wts-danger-soft: #7F1D1D;
-  --wts-danger-soft-2: #7F1D1D;
-  --wts-danger-soft-2-hover: #991B1B;
+  --wts-danger-soft: rgba(239, 68, 68, 0.18);
+  --wts-danger-soft-2: rgba(239, 68, 68, 0.22);
+  --wts-danger-soft-2-hover: rgba(239, 68, 68, 0.32);
   --wts-danger-strong: #FECACA;
   --wts-danger-border: #991B1B;
-  --wts-warning-soft: #78350F;
+  --wts-warning-soft: rgba(245, 158, 11, 0.2);
   --wts-warning-strong: #FED7AA;
-  --wts-warning-bg: #7C2D12;
-  --wts-warning-bg-hover: #9A3412;
-  --wts-success-soft: #14532D;
+  --wts-warning-bg: rgba(245, 158, 11, 0.25);
+  --wts-warning-bg-hover: rgba(245, 158, 11, 0.35);
+  --wts-success-soft: rgba(34, 197, 94, 0.18);
   --wts-success-border: #166534;
   --wts-success-text: #BBF7D0;
-  --wts-hover: #374151;
-  --wts-row-active: #14532D;
-  --wts-row-help: #7F1D1D;
+  --wts-hover: rgba(255, 255, 255, 0.08);
+  --wts-row-active: rgba(37, 211, 102, 0.18);
+  --wts-row-help: rgba(239, 68, 68, 0.18);
   --wts-current-tag: #4ADE80;
   --wts-header-gradient: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
+  --wts-header-glass: linear-gradient(135deg, rgba(18, 140, 126, 0.9) 0%, rgba(7, 94, 84, 0.9) 100%);
+  --wts-panel-bg: rgba(31, 41, 55, 0.7);
   --wts-backdrop: rgba(0, 0, 0, 0.6);
   --wts-lock-backdrop: rgba(0, 0, 0, 0.7);
 }
@@ -73,13 +78,20 @@
 .wts-panel {
   pointer-events: auto;
   width: 300px;
-  background: var(--wts-bg);
+  background: var(--wts-panel-bg);
+  -webkit-backdrop-filter: blur(var(--wts-panel-blur)) saturate(140%);
+  backdrop-filter: blur(var(--wts-panel-blur)) saturate(140%);
   border-radius: var(--wts-radius);
   box-shadow: var(--wts-shadow);
   border: 1px solid var(--wts-border);
   overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
   transform-origin: top right;
+}
+
+/* Browsers without backdrop-filter get an opaque panel so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .wts-panel { background: var(--wts-bg); }
 }
 
 .wts-panel.collapsed {
@@ -93,7 +105,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: var(--wts-header-gradient);
+  background: var(--wts-header-glass);
   color: white;
 }
 
