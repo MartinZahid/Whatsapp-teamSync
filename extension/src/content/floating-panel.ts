@@ -32,6 +32,14 @@ export class FloatingPanel {
   private confirmBtn: HTMLButtonElement | null = null
   private cancelBtn: HTMLButtonElement | null = null
   private pendingDeleteAgent: string | null = null
+  private lockEl: HTMLElement | null = null
+  private lockTitle: HTMLElement | null = null
+  private lockMessage: HTMLElement | null = null
+  private lockPrimary: HTMLButtonElement | null = null
+  private lockSecondary: HTMLButtonElement | null = null
+  private currentLock: { contact: string; ownerName: string; isOwner: boolean } | null = null
+  private onClaimCallback: ((contact: string) => void) | null = null
+  private onYieldCallback: (() => void) | null = null
 
   constructor() {
     this.init()
@@ -143,6 +151,17 @@ export class FloatingPanel {
           </div>
         </div>
       </div>
+      <div class="wts-lock hidden" id="wts-lock" role="dialog" aria-modal="true" aria-labelledby="wts-lock-title">
+        <div class="wts-lock-backdrop"></div>
+        <div class="wts-lock-box">
+          <p class="wts-lock-title" id="wts-lock-title"></p>
+          <p class="wts-lock-message" id="wts-lock-message"></p>
+          <div class="wts-lock-actions">
+            <button class="wts-lock-secondary hidden" id="wts-lock-secondary"></button>
+            <button class="wts-lock-primary" id="wts-lock-primary"></button>
+          </div>
+        </div>
+      </div>
     `
 
     this.panel = this.shadowRoot.getElementById('wts-panel') as HTMLElement
@@ -157,6 +176,11 @@ export class FloatingPanel {
     this.modalMessage = this.shadowRoot.getElementById('wts-modal-message') as HTMLElement
     this.confirmBtn = this.shadowRoot.getElementById('wts-modal-confirm') as HTMLButtonElement
     this.cancelBtn = this.shadowRoot.getElementById('wts-modal-cancel') as HTMLButtonElement
+    this.lockEl = this.shadowRoot.getElementById('wts-lock') as HTMLElement
+    this.lockTitle = this.shadowRoot.getElementById('wts-lock-title') as HTMLElement
+    this.lockMessage = this.shadowRoot.getElementById('wts-lock-message') as HTMLElement
+    this.lockPrimary = this.shadowRoot.getElementById('wts-lock-primary') as HTMLButtonElement
+    this.lockSecondary = this.shadowRoot.getElementById('wts-lock-secondary') as HTMLButtonElement
 
     // Set logo src via runtime URL (content script needs chrome.runtime.getURL)
     const logo = this.shadowRoot?.querySelector('.wts-logo') as HTMLImageElement
@@ -205,6 +229,25 @@ export class FloatingPanel {
     this.confirmBtn?.addEventListener('click', () => this.confirmDeleteAgent())
     this.confirmModal?.addEventListener('click', (e) => {
       if (e.target === this.confirmModal) this.closeConfirmModal()
+    })
+
+    // Duplicate-chat lock overlay
+    this.lockPrimary?.addEventListener('click', () => {
+      const lock = this.currentLock
+      if (!lock) return
+      if (lock.isOwner) {
+        // Owner chooses to keep the chat: dismiss the banner, conflict persists server-side
+        this.clearDuplicateAlert()
+      } else {
+        this.onClaimCallback?.(lock.contact)
+        this.clearDuplicateAlert()
+      }
+    })
+    this.lockSecondary?.addEventListener('click', () => {
+      if (this.currentLock?.isOwner) {
+        this.onYieldCallback?.()
+        this.clearDuplicateAlert()
+      }
     })
   }
 
@@ -405,6 +448,42 @@ export class FloatingPanel {
     this.currentAgentName = name
   }
 
+  onClaimChat(callback: (contact: string) => void): void {
+    this.onClaimCallback = callback
+  }
+
+  onYieldChat(callback: () => void): void {
+    this.onYieldCallback = callback
+  }
+
+  showDuplicateAlert(info: { contact: string; ownerName: string; isOwner: boolean; others: string[] }): void {
+    if (!this.lockEl || !this.lockTitle || !this.lockMessage || !this.lockPrimary || !this.lockSecondary) return
+
+    this.currentLock = { contact: info.contact, ownerName: info.ownerName, isOwner: info.isOwner }
+
+    if (info.isOwner) {
+      const othersText = info.others.length ? info.others.join(', ') : 'Otro agente'
+      this.lockTitle.textContent = 'Otro agente abrió tu chat'
+      this.lockMessage.textContent = `${othersText} también está escribiendo en "${info.contact}".`
+      this.lockPrimary.textContent = 'Seguir atendiendo'
+      this.lockSecondary.textContent = 'Ceder el chat'
+      this.lockSecondary.classList.remove('hidden')
+    } else {
+      this.lockTitle.textContent = 'Chat ocupado'
+      this.lockMessage.textContent = `"${info.contact}" lo está atendiendo ${info.ownerName}.`
+      this.lockPrimary.textContent = 'Tomar el chat'
+      this.lockSecondary.classList.add('hidden')
+    }
+
+    this.lockEl.classList.remove('hidden')
+    this.lockPrimary.focus()
+  }
+
+  clearDuplicateAlert(): void {
+    this.currentLock = null
+    this.lockEl?.classList.add('hidden')
+  }
+
   setPaused(paused: boolean): void {
     this.isPaused = paused
     if (paused) {
@@ -416,8 +495,7 @@ export class FloatingPanel {
     }
   }
 
-  updateServerStatus(connected: boolean): void {
-    this.serverConnected = connected
+  updateServerStatus(connected: boolean): void {    this.serverConnected = connected
     const statusEl = this.shadowRoot?.getElementById('wts-server-status')
     if (!statusEl) return
 

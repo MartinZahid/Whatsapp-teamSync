@@ -29,6 +29,8 @@ type RuntimeMessage =
   | { type: 'GET_STATE' }
   | { type: 'DELETE_AGENT'; agentName: string }
   | { type: 'HELP_REQUEST'; requesting: boolean }
+  | { type: 'TYPING'; contact: string; typing: boolean }
+  | { type: 'CLAIM_CHAT'; contact: string }
 
 type ContentMessage =
   | { type: 'PRESENCE_UPDATE'; agents: Agent[] }
@@ -36,6 +38,8 @@ type ContentMessage =
   | { type: 'AGENT_STATUS'; status: AgentStatus }
   | { type: 'CURRENT_AGENT_NAME'; name: string }
   | { type: 'CONFIG'; config: AgentConfig }
+  | { type: 'DUPLICATE_ALERT'; contact: string; ownerName: string; isOwner: boolean; others: string[] }
+  | { type: 'DUPLICATE_CLEAR'; contact: string }
 
 const STORAGE_KEY = 'wts_agent_config'
 const MAX_RECONNECT_ATTEMPTS = 10
@@ -70,6 +74,17 @@ class BackgroundManager {
     chrome.tabs.onRemoved.addListener((tabId) => {
       if (this.currentTabId === tabId) {
         this.currentTabId = null
+      }
+    })
+
+    // Duplicate-chat notifications: "Ir al chat" focuses WhatsApp Web
+    chrome.notifications.onClicked.addListener((notificationId) => {
+      if (notificationId.startsWith('wts-duplicate-')) this.focusWhatsApp()
+    })
+    chrome.notifications.onButtonClicked.addListener((notificationId) => {
+      if (notificationId.startsWith('wts-duplicate-')) {
+        this.focusWhatsApp()
+        chrome.notifications.clear(notificationId, () => {})
       }
     })
 
@@ -208,7 +223,62 @@ class BackgroundManager {
       case 'ERROR':
         console.error('[WTS] Server error:', message.message)
         break
+      case 'DUPLICATE_ALERT':
+        this.handleDuplicateAlert(message)
+        break
+      case 'DUPLICATE_CLEAR':
+        this.handleDuplicateClear(message)
+        break
     }
+  }
+
+  private handleDuplicateAlert(message: ServerToClientMessage & { contact: string; ownerName: string; isOwner: boolean; others: string[] }): void {
+    const title = message.isOwner ? 'Otro agente abrió tu chat' : 'Chat ocupado'
+    const body = message.isOwner
+      ? `${message.others.join(', ')} también está escribiendo en "${message.contact}"`
+      : `"${message.contact}" lo está atendiendo ${message.ownerName}`
+
+    const notificationId = `wts-duplicate-${message.contact}`
+    chrome.notifications.create(notificationId, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+      title,
+      message: body,
+      requireInteraction: true,
+      buttons: [{ title: 'Ir al chat' }],
+      priority: 2
+    }).catch(() => {})
+
+    chrome.action.setBadgeText({ text: '!' })
+    chrome.action.setBadgeBackgroundColor({ color: '#DC2626' })
+
+    this.broadcastToContent({
+      type: 'DUPLICATE_ALERT',
+      contact: message.contact,
+      ownerName: message.ownerName,
+      isOwner: message.isOwner,
+      others: message.others
+    })
+  }
+
+  private handleDuplicateClear(message: ServerToClientMessage & { contact: string }): void {
+    chrome.notifications.clear(`wts-duplicate-${message.contact}`, () => {})
+    chrome.action.setBadgeText({ text: '' })
+
+    this.broadcastToContent({
+      type: 'DUPLICATE_CLEAR',
+      contact: message.contact
+    })
+  }
+
+  private focusWhatsApp(): void {
+    chrome.tabs.query({ url: 'https://web.whatsapp.com/*' }, (tabs) => {
+      const tab = tabs[0]
+      if (tab?.id) {
+        chrome.tabs.update(tab.id, { active: true })
+        if (tab.windowId) chrome.windows.update(tab.windowId, { focused: true })
+      }
+    })
   }
 
   private handlePresenceUpdate(message: ServerToClientMessage & { agents: Agent[] }): void {
@@ -341,6 +411,16 @@ class BackgroundManager {
         this.handleHelpRequest(message.requesting)
         sendResponse({ success: true })
         break
+
+      case 'TYPING':
+        this.handleTyping(message.contact, message.typing)
+        sendResponse({ success: true })
+        break
+
+      case 'CLAIM_CHAT':
+        this.handleClaimChat(message.contact)
+        sendResponse({ success: true })
+        break
     }
     return true
   }
@@ -445,6 +525,18 @@ class BackgroundManager {
       agents: this.getAllAgents()
     })
     this.broadcastStatus(requesting ? 'active' : 'available')
+  }
+
+  private handleTyping(contact: string, typing: boolean): void {
+    const agentName = this.config?.agentName
+    if (!agentName) return
+    this.send({ type: 'TYPING', agent: agentName, contact, typing })
+  }
+
+  private handleClaimChat(contact: string): void {
+    const agentName = this.config?.agentName
+    if (!agentName) return
+    this.send({ type: 'CLAIM_CHAT', agent: agentName, contact })
   }
 
   private handleServerUrlUpdate(url: string): void {
@@ -575,6 +667,7 @@ class BackgroundManager {
   private disconnect(): void {
     this.isIntentionallyClosed = true
     this.stopHeartbeat()
+    chrome.action.setBadgeText({ text: '' })
 
     if (this.ws) {
       this.ws.close()

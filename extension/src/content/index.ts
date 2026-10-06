@@ -5,6 +5,7 @@ import './styles.css'
 import { DomObserver } from './dom-observer'
 import { ContactDetector } from './contact-detector'
 import { FloatingPanel } from './floating-panel'
+import { TypingDetector } from './typing-detector'
 
 type ContentBackgroundMessage =
   | { type: 'PRESENCE_UPDATE'; agents: Agent[] }
@@ -12,20 +13,33 @@ type ContentBackgroundMessage =
   | { type: 'AGENT_STATUS'; status: AgentStatus }
   | { type: 'CURRENT_AGENT_NAME'; name: string }
   | { type: 'CONFIG'; config: AgentConfig }
+  | { type: 'DUPLICATE_ALERT'; contact: string; ownerName: string; isOwner: boolean; others: string[] }
+  | { type: 'DUPLICATE_CLEAR'; contact: string }
+
+const ORIGINAL_TITLE = document.title
+const BLINK_TITLE = 'Chat ocupado'
 
 class WhatsAppTeamSync {
   private domObserver: DomObserver
   private contactDetector: ContactDetector
   private floatingPanel: FloatingPanel
+  private typingDetector: TypingDetector
   private currentContact: string | null = null
   private isPaused = false
   private config: AgentConfig | null = null
   private currentAgentName: string | null = null
+  private titleBlinkTimer: number | null = null
+  private alertContact: string | null = null
 
   constructor() {
     this.domObserver = new DomObserver()
     this.contactDetector = new ContactDetector()
     this.floatingPanel = new FloatingPanel()
+    this.typingDetector = new TypingDetector()
+
+    this.typingDetector.onTyping((contact, typing) => this.sendTyping(contact, typing))
+    this.floatingPanel.onClaimChat((contact) => this.sendClaimChat(contact))
+    this.floatingPanel.onYieldChat(() => this.updateBackgroundContact(null))
 
     this.init()
   }
@@ -50,8 +64,7 @@ class WhatsAppTeamSync {
       this.domObserver.restart()
 
       const contact = await this.contactDetector.detectCurrentContact()
-      this.currentContact = contact
-      this.updateBackgroundContact(contact)
+      this.setCurrentContact(contact)
 
       this.notifyBackgroundReady()
     }
@@ -84,10 +97,7 @@ class WhatsAppTeamSync {
     })
 
     this.contactDetector.startObserving((contact) => {
-      if (contact !== this.currentContact) {
-        this.currentContact = contact
-        this.updateBackgroundContact(contact)
-      }
+      this.setCurrentContact(contact)
     })
 
     chrome.runtime.onMessage.addListener((message) => this.handleBackgroundMessage(message))
@@ -99,14 +109,34 @@ class WhatsAppTeamSync {
     }
 
     if (contactName) {
-      this.currentContact = contactName
-      this.updateBackgroundContact(contactName)
+      this.setCurrentContact(contactName)
     }
   }
 
   private onChatDeselected(): void {
-    this.currentContact = null
-    this.updateBackgroundContact(null)
+    this.setCurrentContact(null)
+  }
+
+  private setCurrentContact(contact: string | null): void {
+    if (contact === this.currentContact) return
+    this.currentContact = contact
+    this.typingDetector.setContact(contact)
+    this.updateBackgroundContact(contact)
+  }
+
+  private sendTyping(contact: string, typing: boolean): void {
+    chrome.runtime.sendMessage({
+      type: 'TYPING',
+      contact,
+      typing
+    }).catch(() => {})
+  }
+
+  private sendClaimChat(contact: string): void {
+    chrome.runtime.sendMessage({
+      type: 'CLAIM_CHAT',
+      contact
+    }).catch(() => {})
   }
 
   private updateBackgroundContact(contact: string | null): void {
@@ -141,7 +171,37 @@ class WhatsAppTeamSync {
       case 'CONFIG':
         this.config = message.config
         break
+      case 'DUPLICATE_ALERT':
+        this.alertContact = message.contact
+        this.floatingPanel.showDuplicateAlert({
+          contact: message.contact,
+          ownerName: message.ownerName,
+          isOwner: message.isOwner,
+          others: message.others
+        })
+        this.startTitleBlink()
+        break
+      case 'DUPLICATE_CLEAR':
+        this.floatingPanel.clearDuplicateAlert()
+        this.stopTitleBlink()
+        break
     }
+  }
+
+  private startTitleBlink(): void {
+    if (this.titleBlinkTimer !== null) return
+    let on = false
+    this.titleBlinkTimer = window.setInterval(() => {
+      document.title = on ? ORIGINAL_TITLE : BLINK_TITLE
+      on = !on
+    }, 1000)
+  }
+
+  private stopTitleBlink(): void {
+    if (this.titleBlinkTimer === null) return
+    clearInterval(this.titleBlinkTimer)
+    this.titleBlinkTimer = null
+    document.title = ORIGINAL_TITLE
   }
 
   private notifyBackgroundReady(): void {

@@ -430,3 +430,74 @@
 }
 
 .wts-modal-confirm:hover { background: #DC2626; }
+
+.wts-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.wts-lock-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.wts-lock-box {
+  position: relative;
+  background: var(--wts-bg);
+  color: var(--wts-text);
+  border-radius: var(--wts-radius);
+  box-shadow: var(--wts-shadow);
+  border: 1px solid var(--wts-border);
+  padding: 20px;
+  width: 300px;
+  max-width: 90vw;
+}
+
+.wts-lock-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #DC2626;
+}
+
+.wts-lock-message {
+  font-size: 13px;
+  color: var(--wts-text-muted);
+  margin-bottom: 16px;
+  word-break: break-word;
+}
+
+.wts-lock-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.wts-lock-actions button {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--wts-border);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.wts-lock-secondary {
+  background: transparent;
+  color: var(--wts-text);
+}
+
+.wts-lock-primary {
+  background: #DC2626;
+  border-color: #DC2626;
+  color: white;
+}
+
+.wts-lock-primary:hover { background: #B91C1C; }

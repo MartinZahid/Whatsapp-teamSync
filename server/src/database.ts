@@ -102,6 +102,8 @@ export type EventType =
   | 'help_cancel'
   | 'connected'
   | 'disconnected'
+  | 'duplicate_alert'
+  | 'chat_claimed'
 
 export function insertEvent(agent: string, type: EventType, detail?: string): void {
   try {

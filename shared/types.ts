@@ -62,7 +62,20 @@ export interface HelpRequestMessage {
   requesting: boolean
 }
 
-export type ClientToServerMessage = AttendingMessage | PausedMessage | AvailableMessage | OfflineMessage | DeleteAgentMessage | HeartbeatMessage | HelpRequestMessage
+export interface TypingMessage {
+  type: 'TYPING'
+  agent: string
+  contact: string
+  typing: boolean
+}
+
+export interface ClaimChatMessage {
+  type: 'CLAIM_CHAT'
+  agent: string
+  contact: string
+}
+
+export type ClientToServerMessage = AttendingMessage | PausedMessage | AvailableMessage | OfflineMessage | DeleteAgentMessage | HeartbeatMessage | HelpRequestMessage | TypingMessage | ClaimChatMessage
 
 export interface ServerInfoMessage {
   type: 'SERVER_INFO'
@@ -82,7 +95,20 @@ export interface WelcomeMessage {
   protocol: string
 }
 
-export type ServerToClientMessage = PresenceUpdate | ServerInfoMessage | ErrorMessage | WelcomeMessage
+export interface DuplicateAlertMessage {
+  type: 'DUPLICATE_ALERT'
+  contact: string
+  ownerName: string
+  isOwner: boolean
+  others: string[]
+}
+
+export interface DuplicateClearMessage {
+  type: 'DUPLICATE_CLEAR'
+  contact: string
+}
+
+export type ServerToClientMessage = PresenceUpdate | ServerInfoMessage | ErrorMessage | WelcomeMessage | DuplicateAlertMessage | DuplicateClearMessage
 
 export type WSMessage = ClientToServerMessage | ServerToClientMessage
 
@@ -113,6 +139,14 @@ export function isHeartbeatMessage(msg: WSMessage): msg is HeartbeatMessage {
 
 export function isHelpRequestMessage(msg: WSMessage): msg is HelpRequestMessage {
   return msg.type === 'HELP_REQUEST'
+}
+
+export function isTypingMessage(msg: WSMessage): msg is TypingMessage {
+  return msg.type === 'TYPING'
+}
+
+export function isClaimChatMessage(msg: WSMessage): msg is ClaimChatMessage {
+  return msg.type === 'CLAIM_CHAT'
 }
 
 // Status colors
