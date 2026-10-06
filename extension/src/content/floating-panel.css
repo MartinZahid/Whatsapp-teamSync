@@ -1,10 +1,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* The panel lives inside a Shadow DOM, so theme tokens must be declared on
-   :host (not :root, which never matches inside a shadow tree). The document
-   adds/removes the `.wts-dark` class on the host based on WhatsApp's theme. */
-:host {
-  color-scheme: light;
+:root {
   --wts-primary: #25D366;
   --wts-primary-hover: #1EB35A;
   --wts-bg: #ffffff;
@@ -17,81 +13,25 @@
   --wts-paused: #F59E0B;
   --wts-available: #22C55E;
   --wts-offline: #9CA3AF;
-  --wts-danger: #DC2626;
-  --wts-danger-hover: #B91C1C;
-  --wts-danger-tint: rgba(239, 68, 68, 0.1);
-  --wts-danger-soft: rgba(239, 68, 68, 0.12);
-  --wts-danger-soft-2: rgba(239, 68, 68, 0.18);
-  --wts-danger-soft-2-hover: rgba(239, 68, 68, 0.28);
-  --wts-danger-strong: #991B1B;
-  --wts-danger-border: #FECACA;
-  --wts-warning-soft: rgba(245, 158, 11, 0.15);
-  --wts-warning-strong: #9A3412;
-  --wts-warning-bg: rgba(245, 158, 11, 0.22);
-  --wts-warning-bg-hover: rgba(245, 158, 11, 0.32);
-  --wts-success-soft: rgba(34, 197, 94, 0.15);
-  --wts-success-border: #86EFAC;
-  --wts-success-text: #166534;
-  --wts-hover: rgba(15, 23, 42, 0.06);
-  --wts-row-active: rgba(37, 211, 102, 0.16);
-  --wts-row-help: rgba(239, 68, 68, 0.12);
-  --wts-current-tag: #25D366;
-  --wts-header-gradient: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-  --wts-header-glass: linear-gradient(135deg, rgba(37, 211, 102, 0.8) 0%, rgba(18, 140, 126, 0.8) 100%);
-  --wts-panel-bg: rgba(255, 255, 255, 0.2);
-  --wts-panel-blur: 16px;
-  --wts-backdrop: rgba(0, 0, 0, 0.4);
-  --wts-lock-backdrop: rgba(0, 0, 0, 0.55);
 }
 
 :host(.wts-dark) {
-  color-scheme: dark;
   --wts-bg: #1F2937;
   --wts-text: #F3F4F6;
   --wts-text-muted: #9CA3AF;
   --wts-border: #374151;
-  --wts-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --wts-danger-tint: rgba(239, 68, 68, 0.2);
-  --wts-danger-soft: rgba(239, 68, 68, 0.18);
-  --wts-danger-soft-2: rgba(239, 68, 68, 0.22);
-  --wts-danger-soft-2-hover: rgba(239, 68, 68, 0.32);
-  --wts-danger-strong: #FECACA;
-  --wts-danger-border: #991B1B;
-  --wts-warning-soft: rgba(245, 158, 11, 0.2);
-  --wts-warning-strong: #FED7AA;
-  --wts-warning-bg: rgba(245, 158, 11, 0.25);
-  --wts-warning-bg-hover: rgba(245, 158, 11, 0.35);
-  --wts-success-soft: rgba(34, 197, 94, 0.18);
-  --wts-success-border: #166534;
-  --wts-success-text: #BBF7D0;
-  --wts-hover: rgba(255, 255, 255, 0.08);
-  --wts-row-active: rgba(37, 211, 102, 0.18);
-  --wts-row-help: rgba(239, 68, 68, 0.18);
-  --wts-current-tag: #4ADE80;
-  --wts-header-gradient: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
-  --wts-header-glass: linear-gradient(135deg, rgba(18, 140, 126, 0.8) 0%, rgba(7, 94, 84, 0.8) 100%);
-  --wts-panel-bg: rgba(31, 41, 55, 0.35);
-  --wts-backdrop: rgba(0, 0, 0, 0.6);
-  --wts-lock-backdrop: rgba(0, 0, 0, 0.7);
 }
 
 .wts-panel {
   pointer-events: auto;
   width: 300px;
-  background: var(--wts-panel-bg);
-  -webkit-backdrop-filter: blur(var(--wts-panel-blur)) saturate(140%);
-  backdrop-filter: blur(var(--wts-panel-blur)) saturate(140%);
+  background: var(--wts-bg);
   border-radius: var(--wts-radius);
   box-shadow: var(--wts-shadow);
   border: 1px solid var(--wts-border);
   overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
   transform-origin: top right;
-}
-
-/* Browsers without backdrop-filter get an opaque panel so text stays readable. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .wts-panel { background: var(--wts-bg); }
 }
 
 .wts-panel.collapsed {
@@ -105,7 +45,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: var(--wts-header-glass);
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
   color: white;
 }
 
@@ -156,13 +96,21 @@
   position: relative;
 }
 
-.wts-agent:hover { background: var(--wts-hover); }
+.wts-agent:hover { background: #F3F4F6; }
 
-.wts-agent.current-user { background: var(--wts-row-active); }
+:host(.wts-dark) .wts-agent:hover { background: #374151; }
+
+.wts-agent.current-user { background: #F0FDF4; }
 
 .wts-agent.help-requested {
-  background: var(--wts-row-help);
-  border-left: 3px solid var(--wts-active);
+  background: #FEF2F2;
+  border-left: 3px solid #EF4444;
+}
+
+:host(.wts-dark) .wts-agent.current-user { background: #14532D; }
+:host(.wts-dark) .wts-agent.help-requested {
+  background: #7F1D1D;
+  border-left-color: #EF4444;
 }
 
 .wts-delete-btn {
@@ -184,8 +132,8 @@
 }
 
 .wts-delete-btn:hover {
-  color: var(--wts-active);
-  background: var(--wts-danger-tint);
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .wts-agent-avatar {
@@ -224,7 +172,7 @@
 .wts-agent.current-user .wts-agent-name::after {
   content: ' (tú)';
   font-weight: 400;
-  color: var(--wts-current-tag);
+  color: #25D366;
   font-size: 12px;
 }
 
@@ -284,21 +232,21 @@
   border: 1px solid var(--wts-border);
   border-radius: 6px;
   background: transparent;
-  color: var(--wts-active);
+  color: #EF4444;
   font-size: 12px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s;
 }
-.wts-help-btn:hover { background: var(--wts-danger-soft); }
+.wts-help-btn:hover { background: #FEF2F2; }
 .wts-help-btn svg { width: 14px; height: 14px; }
 .wts-cancel-help-btn {
-  color: var(--wts-danger-strong);
-  border-color: var(--wts-active);
-  background: var(--wts-danger-soft-2);
+  color: #991B1B;
+  border-color: #EF4444;
+  background: #FEE2E2;
 }
-.wts-cancel-help-btn:hover { background: var(--wts-danger-soft-2-hover); }
+.wts-cancel-help-btn:hover { background: #FECACA; }
 .wts-pause-btn {
   flex: 1;
   display: inline-flex;
@@ -316,30 +264,39 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.wts-pause-btn:hover { background: var(--wts-warning-soft); }
+.wts-pause-btn:hover { background: #FEF3C7; }
 .wts-pause-btn svg { width: 14px; height: 14px; }
 .wts-resume-btn {
-  color: var(--wts-warning-strong);
+  color: #9A3412;
   border-color: var(--wts-primary);
-  background: var(--wts-warning-bg);
+  background: #FED7AA;
 }
-.wts-resume-btn:hover { background: var(--wts-warning-bg-hover); }
+.wts-resume-btn:hover { background: #FDBA74; }
 
 .wts-server-status {
   padding: 8px 16px;
-  background: var(--wts-danger-soft);
-  border-top: 1px solid var(--wts-danger-border);
+  background: #FEF2F2;
+  border-top: 1px solid #FECACA;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  color: var(--wts-danger-strong);
+  color: #991B1B;
 }
 
 .wts-server-status.connected {
-  background: var(--wts-success-soft);
-  border-top-color: var(--wts-success-border);
-  color: var(--wts-success-text);
+  background: #F0FDF4;
+  border-top-color: #86EFAC;
+  color: #166534;
+}
+
+:host(.wts-dark) .wts-server-status {
+  background: #7F1D1D;
+  border-top-color: #991B1B;
+}
+:host(.wts-dark) .wts-server-status.connected {
+  background: #14532D;
+  border-top-color: #166534;
 }
 
 .wts-collapsed-badge {
@@ -347,7 +304,7 @@
   top: 0;
   right: 0;
   z-index: 2147483647;
-  background: var(--wts-header-gradient);
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
   color: white;
   padding: 10px 14px;
   border-radius: 50px;
@@ -366,7 +323,7 @@
 .wts-collapsed-badge:hover { opacity: 0.9; }
 
 .wts-collapsed-badge.help-active {
-  background: var(--wts-danger);
+  background: #DC2626;
   animation: wts-badge-pulse 1.5s ease-in-out infinite;
 }
 
@@ -409,7 +366,7 @@
 .wts-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: var(--wts-backdrop);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .wts-modal-box {
@@ -459,12 +416,12 @@
 }
 
 .wts-modal-confirm {
-  background: var(--wts-active);
-  border-color: var(--wts-active);
+  background: #EF4444;
+  border-color: #EF4444;
   color: white;
 }
 
-.wts-modal-confirm:hover { background: var(--wts-danger); }
+.wts-modal-confirm:hover { background: #DC2626; }
 
 .wts-lock {
   position: fixed;
@@ -479,7 +436,7 @@
 .wts-lock-backdrop {
   position: absolute;
   inset: 0;
-  background: var(--wts-lock-backdrop);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .wts-lock-box {
@@ -498,7 +455,7 @@
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: var(--wts-danger);
+  color: #DC2626;
 }
 
 .wts-lock-message {
@@ -530,9 +487,9 @@
 }
 
 .wts-lock-primary {
-  background: var(--wts-danger);
-  border-color: var(--wts-danger);
+  background: #DC2626;
+  border-color: #DC2626;
   color: white;
 }
 
-.wts-lock-primary:hover { background: var(--wts-danger-hover); }
+.wts-lock-primary:hover { background: #B91C1C; }
