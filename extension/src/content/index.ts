@@ -16,9 +16,6 @@ type ContentBackgroundMessage =
   | { type: 'DUPLICATE_ALERT'; contact: string; ownerName: string; isOwner: boolean; others: string[] }
   | { type: 'DUPLICATE_CLEAR'; contact: string }
 
-const ORIGINAL_TITLE = document.title
-const BLINK_TITLE = 'Chat ocupado'
-
 class WhatsAppTeamSync {
   private domObserver: DomObserver
   private contactDetector: ContactDetector
@@ -28,8 +25,6 @@ class WhatsAppTeamSync {
   private isPaused = false
   private config: AgentConfig | null = null
   private currentAgentName: string | null = null
-  private titleBlinkTimer: number | null = null
-  private titleBeforeBlink: string | null = null
   private lockContact: string | null = null
 
   constructor() {
@@ -126,7 +121,6 @@ class WhatsAppTeamSync {
     // if we come back to a contact that still has an active conflict.
     if (this.lockContact && this.lockContact !== contact) {
       this.floatingPanel.clearDuplicateAlert()
-      this.stopTitleBlink()
       this.lockContact = null
     }
     this.typingDetector.setContact(contact)
@@ -188,32 +182,12 @@ class WhatsAppTeamSync {
           isOwner: message.isOwner,
           others: message.others
         })
-        this.startTitleBlink()
         break
       case 'DUPLICATE_CLEAR':
         this.lockContact = null
         this.floatingPanel.clearDuplicateAlert()
-        this.stopTitleBlink()
         break
     }
-  }
-
-  private startTitleBlink(): void {
-    if (this.titleBlinkTimer !== null) return
-    this.titleBeforeBlink = document.title
-    let on = false
-    this.titleBlinkTimer = window.setInterval(() => {
-      document.title = on ? (this.titleBeforeBlink ?? ORIGINAL_TITLE) : BLINK_TITLE
-      on = !on
-    }, 1000)
-  }
-
-  private stopTitleBlink(): void {
-    if (this.titleBlinkTimer === null) return
-    clearInterval(this.titleBlinkTimer)
-    this.titleBlinkTimer = null
-    document.title = this.titleBeforeBlink ?? ORIGINAL_TITLE
-    this.titleBeforeBlink = null
   }
 
   private notifyBackgroundReady(): void {

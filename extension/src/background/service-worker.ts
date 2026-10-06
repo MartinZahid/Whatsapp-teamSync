@@ -77,17 +77,6 @@ class BackgroundManager {
       }
     })
 
-    // Duplicate-chat notifications: "Ir al chat" focuses WhatsApp Web
-    chrome.notifications.onClicked.addListener((notificationId) => {
-      if (notificationId.startsWith('wts-duplicate-')) this.focusWhatsApp()
-    })
-    chrome.notifications.onButtonClicked.addListener((notificationId) => {
-      if (notificationId.startsWith('wts-duplicate-')) {
-        this.focusWhatsApp()
-        chrome.notifications.clear(notificationId, () => {})
-      }
-    })
-
     // Auto-connect if config exists
     if (this.config) {
       this.connect()
@@ -233,25 +222,8 @@ class BackgroundManager {
   }
 
   private handleDuplicateAlert(message: ServerToClientMessage & { contact: string; ownerName: string; isOwner: boolean; others: string[] }): void {
-    const title = message.isOwner ? 'Otro agente abrió tu chat' : 'Chat ocupado'
-    const body = message.isOwner
-      ? `${message.others.join(', ')} también está escribiendo en "${message.contact}"`
-      : `"${message.contact}" lo está atendiendo ${message.ownerName}`
-
-    const notificationId = `wts-duplicate-${message.contact}`
-    chrome.notifications.create(notificationId, {
-      type: 'basic',
-      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
-      title,
-      message: body,
-      requireInteraction: true,
-      buttons: [{ title: 'Ir al chat' }],
-      priority: 2
-    }).catch(() => {})
-
-    chrome.action.setBadgeText({ text: '!' })
-    chrome.action.setBadgeBackgroundColor({ color: '#DC2626' })
-
+    // The duplicate warning is shown only in-page (lock overlay): no system
+    // notification, badge or title blink.
     this.broadcastToContent({
       type: 'DUPLICATE_ALERT',
       contact: message.contact,
@@ -262,22 +234,9 @@ class BackgroundManager {
   }
 
   private handleDuplicateClear(message: ServerToClientMessage & { contact: string }): void {
-    chrome.notifications.clear(`wts-duplicate-${message.contact}`, () => {})
-    chrome.action.setBadgeText({ text: '' })
-
     this.broadcastToContent({
       type: 'DUPLICATE_CLEAR',
       contact: message.contact
-    })
-  }
-
-  private focusWhatsApp(): void {
-    chrome.tabs.query({ url: 'https://web.whatsapp.com/*' }, (tabs) => {
-      const tab = tabs[0]
-      if (tab?.id) {
-        chrome.tabs.update(tab.id, { active: true })
-        if (tab.windowId) chrome.windows.update(tab.windowId, { focused: true })
-      }
     })
   }
 
@@ -667,7 +626,6 @@ class BackgroundManager {
   private disconnect(): void {
     this.isIntentionallyClosed = true
     this.stopHeartbeat()
-    chrome.action.setBadgeText({ text: '' })
 
     // Release any duplicate lock overlay that may be stuck on the page.
     this.broadcastToContent({ type: 'DUPLICATE_CLEAR', contact: '' })

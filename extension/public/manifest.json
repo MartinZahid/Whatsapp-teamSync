@@ -1,6 +1,6 @@
 {
   "name": "WhatsApp Team Sync",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Colaboración en tiempo real para equipos de WhatsApp Web",
   "manifest_version": 3,
   "icons": {
@@ -35,8 +35,7 @@
   ],
   "permissions": [
     "storage",
-    "activeTab",
-    "notifications"
+    "activeTab"
   ],
   "host_permissions": [
     "https://web.whatsapp.com/*"
