@@ -16,7 +16,6 @@
 }
 
 :host(.wts-dark) {
-  --wts-bg: #1F2937;
   --wts-text: #F3F4F6;
   --wts-text-muted: #9CA3AF;
   --wts-border: #374151;
