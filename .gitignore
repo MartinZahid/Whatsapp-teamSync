@@ -10,3 +10,4 @@ dist.zip
 *.docx
 shared/types.js
 shared/types.d.ts
+server/data/

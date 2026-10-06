@@ -29,7 +29,7 @@ class WhatsAppTeamSync {
   private config: AgentConfig | null = null
   private currentAgentName: string | null = null
   private titleBlinkTimer: number | null = null
-  private alertContact: string | null = null
+  private titleBeforeBlink: string | null = null
 
   constructor() {
     this.domObserver = new DomObserver()
@@ -39,7 +39,7 @@ class WhatsAppTeamSync {
 
     this.typingDetector.onTyping((contact, typing) => this.sendTyping(contact, typing))
     this.floatingPanel.onClaimChat((contact) => this.sendClaimChat(contact))
-    this.floatingPanel.onYieldChat(() => this.updateBackgroundContact(null))
+    this.floatingPanel.onYieldChat(() => this.setCurrentContact(null))
 
     this.init()
   }
@@ -172,7 +172,6 @@ class WhatsAppTeamSync {
         this.config = message.config
         break
       case 'DUPLICATE_ALERT':
-        this.alertContact = message.contact
         this.floatingPanel.showDuplicateAlert({
           contact: message.contact,
           ownerName: message.ownerName,
@@ -190,9 +189,10 @@ class WhatsAppTeamSync {
 
   private startTitleBlink(): void {
     if (this.titleBlinkTimer !== null) return
+    this.titleBeforeBlink = document.title
     let on = false
     this.titleBlinkTimer = window.setInterval(() => {
-      document.title = on ? ORIGINAL_TITLE : BLINK_TITLE
+      document.title = on ? (this.titleBeforeBlink ?? ORIGINAL_TITLE) : BLINK_TITLE
       on = !on
     }, 1000)
   }
@@ -201,7 +201,8 @@ class WhatsAppTeamSync {
     if (this.titleBlinkTimer === null) return
     clearInterval(this.titleBlinkTimer)
     this.titleBlinkTimer = null
-    document.title = ORIGINAL_TITLE
+    document.title = this.titleBeforeBlink ?? ORIGINAL_TITLE
+    this.titleBeforeBlink = null
   }
 
   private notifyBackgroundReady(): void {

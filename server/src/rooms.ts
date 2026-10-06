@@ -170,7 +170,12 @@ export class RoomManager {
   // Called whenever an agent stops being active on a contact
   private onLeftContact(agentId: string, contact: string | null): void {
     this.clearAgentTyping(agentId)
-    if (contact) this.evaluateDuplicate(contact)
+    if (!contact) return
+    this.evaluateDuplicate(contact)
+    // Drop the owner entry once nobody is active on the contact (avoids growth)
+    if (!this.duplicateContacts.has(contact) && this.getActiveForContact(contact).length === 0) {
+      this.contactOwners.delete(contact)
+    }
   }
 
   private evaluateDuplicate(contact: string): void {
@@ -239,6 +244,8 @@ export class RoomManager {
   private handleClaim(agentId: string, contact: string): void {
     const agent = this.agents.get(agentId)
     if (!agent || agent.status !== 'active' || agent.contact !== contact) return
+    // Claiming only makes sense while a conflict is active on this contact
+    if (!this.duplicateContacts.has(contact)) return
 
     this.contactOwners.set(contact, agentId)
     insertEvent(agent.name, 'chat_claimed', contact)
@@ -295,7 +302,6 @@ export class RoomManager {
     if (isAttendingMessage(message)) {
       const contactChanged = agent.contact !== message.contact
       const oldContact = agent.contact
-      if (agent.status === 'active' && contactChanged) endChatSession(agent.name)
       this.setStatus(agent, 'active', message.contact)
       if (contactChanged) {
         startChatSession(agent.name, message.contact)
