@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-team-sync",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "WhatsApp Web collaborative extension for customer service teams",
   "type": "module",
   "scripts": {

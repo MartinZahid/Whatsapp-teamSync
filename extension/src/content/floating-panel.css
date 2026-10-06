@@ -37,9 +37,9 @@
   --wts-row-help: rgba(239, 68, 68, 0.12);
   --wts-current-tag: #25D366;
   --wts-header-gradient: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-  --wts-header-glass: linear-gradient(135deg, rgba(37, 211, 102, 0.9) 0%, rgba(18, 140, 126, 0.9) 100%);
-  --wts-panel-bg: rgba(255, 255, 255, 0.7);
-  --wts-panel-blur: 14px;
+  --wts-header-glass: linear-gradient(135deg, rgba(37, 211, 102, 0.8) 0%, rgba(18, 140, 126, 0.8) 100%);
+  --wts-panel-bg: rgba(255, 255, 255, 0.2);
+  --wts-panel-blur: 16px;
   --wts-backdrop: rgba(0, 0, 0, 0.4);
   --wts-lock-backdrop: rgba(0, 0, 0, 0.55);
 }
@@ -69,8 +69,8 @@
   --wts-row-help: rgba(239, 68, 68, 0.18);
   --wts-current-tag: #4ADE80;
   --wts-header-gradient: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
-  --wts-header-glass: linear-gradient(135deg, rgba(18, 140, 126, 0.9) 0%, rgba(7, 94, 84, 0.9) 100%);
-  --wts-panel-bg: rgba(31, 41, 55, 0.7);
+  --wts-header-glass: linear-gradient(135deg, rgba(18, 140, 126, 0.8) 0%, rgba(7, 94, 84, 0.8) 100%);
+  --wts-panel-bg: rgba(31, 41, 55, 0.35);
   --wts-backdrop: rgba(0, 0, 0, 0.6);
   --wts-lock-backdrop: rgba(0, 0, 0, 0.7);
 }
