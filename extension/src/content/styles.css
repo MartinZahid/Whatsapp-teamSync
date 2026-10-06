@@ -89,16 +89,6 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --wts-bg: #1f2937;
-    --wts-text: #f3f4f6;
-    --wts-border: #374151;
-    --wts-muted: #9ca3af;
-  }
-}
-
 /* Ensure panel doesn't interfere with WhatsApp Web UI */
 .wts-panel {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);

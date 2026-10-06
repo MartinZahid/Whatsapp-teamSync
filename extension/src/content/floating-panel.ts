@@ -5,7 +5,8 @@ import { getStatusColor, getStatusLabel, getStatusClass } from '@shared/types.js
 import styles from './floating-panel.css?raw'
 
 const TIMING = {
-  TIMER_TICK_MS: 1000
+  TIMER_TICK_MS: 1000,
+  THEME_POLL_MS: 2000
 } as const
 
 export class FloatingPanel {
@@ -40,6 +41,9 @@ export class FloatingPanel {
   private currentLock: { contact: string; ownerName: string; isOwner: boolean } | null = null
   private onClaimCallback: ((contact: string) => void) | null = null
   private onYieldCallback: (() => void) | null = null
+  private isDark = false
+  private themeObserver: MutationObserver | null = null
+  private themeInterval: number | null = null
 
   constructor() {
     this.init()
@@ -59,16 +63,10 @@ export class FloatingPanel {
     document.body.appendChild(this.host)
 
     this.shadowRoot = this.host.attachShadow({ mode: 'open' })
-    this.injectStyles()
     this.render()
     this.bindEvents()
     this.loadCollapsedState()
-  }
-
-  private injectStyles(): void {
-    const style = document.createElement('style')
-    style.textContent = this.getStyles()
-    this.shadowRoot!.appendChild(style)
+    this.setupThemeDetection()
   }
 
   private getStyles(): string {
@@ -305,6 +303,81 @@ export class FloatingPanel {
       this.toggleBtn.setAttribute('aria-label', 'Colapsar panel')
       this.toggleBtn.title = 'Colapsar'
     }
+  }
+
+  // ── Theme detection ──────────────────────────────────────────────────────
+  // WhatsApp Web has its own theme setting (System/Light/Dark) that is not
+  // exposed as a stable DOM attribute, so we infer it from the computed
+  // background color of the page and toggle a class on our shadow host.
+  private setupThemeDetection(): void {
+    this.refreshTheme()
+
+    this.themeObserver = new MutationObserver(() => this.refreshTheme())
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style', 'data-theme', 'data-color-scheme']
+    })
+    if (document.body) {
+      this.themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      })
+    }
+
+    this.themeInterval = window.setInterval(() => this.refreshTheme(), TIMING.THEME_POLL_MS)
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') this.refreshTheme()
+    })
+    window.addEventListener('focus', () => this.refreshTheme())
+  }
+
+  refreshTheme(): void {
+    this.setDark(this.detectWhatsAppDark())
+  }
+
+  setDark(isDark: boolean): void {
+    if (this.isDark === isDark) return
+    this.isDark = isDark
+    this.host?.classList.toggle('wts-dark', isDark)
+  }
+
+  private detectWhatsAppDark(): boolean {
+    return this.isDarkColor(this.resolvePageBackground())
+  }
+
+  private resolvePageBackground(): { r: number; g: number; b: number } | null {
+    const candidates: (HTMLElement | null)[] = [
+      document.body,
+      document.getElementById('app'),
+      document.documentElement
+    ]
+    for (const el of candidates) {
+      if (!el) continue
+      const color = this.parseColor(getComputedStyle(el).backgroundColor)
+      if (color) return color
+    }
+    return null
+  }
+
+  private parseColor(value: string): { r: number; g: number; b: number } | null {
+    const match = value.match(/rgba?\(([^)]+)\)/)
+    if (!match) return null
+    const parts = match[1].split(',').map((p) => parseFloat(p.trim()))
+    const [r, g, b, a] = parts
+    if (a !== undefined && !Number.isNaN(a) && a === 0) return null
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null
+    return { r, g, b }
+  }
+
+  private isDarkColor(color: { r: number; g: number; b: number } | null): boolean {
+    if (!color) return false
+    const channel = (v: number): number => {
+      const c = v / 255
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+    }
+    const luminance = 0.2126 * channel(color.r) + 0.7152 * channel(color.g) + 0.0722 * channel(color.b)
+    return luminance < 0.5
   }
 
   // Public API

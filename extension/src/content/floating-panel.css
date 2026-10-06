@@ -1,6 +1,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
+/* The panel lives inside a Shadow DOM, so theme tokens must be declared on
+   :host (not :root, which never matches inside a shadow tree). The document
+   adds/removes the `.wts-dark` class on the host based on WhatsApp's theme. */
+:host {
+  color-scheme: light;
   --wts-primary: #25D366;
   --wts-primary-hover: #1EB35A;
   --wts-bg: #ffffff;
@@ -13,15 +17,57 @@
   --wts-paused: #F59E0B;
   --wts-available: #22C55E;
   --wts-offline: #9CA3AF;
+  --wts-danger: #DC2626;
+  --wts-danger-hover: #B91C1C;
+  --wts-danger-tint: rgba(239, 68, 68, 0.1);
+  --wts-danger-soft: #FEF2F2;
+  --wts-danger-soft-2: #FEE2E2;
+  --wts-danger-soft-2-hover: #FECACA;
+  --wts-danger-strong: #991B1B;
+  --wts-danger-border: #FECACA;
+  --wts-warning-soft: #FEF3C7;
+  --wts-warning-strong: #9A3412;
+  --wts-warning-bg: #FED7AA;
+  --wts-warning-bg-hover: #FDBA74;
+  --wts-success-soft: #F0FDF4;
+  --wts-success-border: #86EFAC;
+  --wts-success-text: #166534;
+  --wts-hover: #F3F4F6;
+  --wts-row-active: #F0FDF4;
+  --wts-row-help: #FEF2F2;
+  --wts-current-tag: #25D366;
+  --wts-header-gradient: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  --wts-backdrop: rgba(0, 0, 0, 0.4);
+  --wts-lock-backdrop: rgba(0, 0, 0, 0.55);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --wts-bg: #1F2937;
-    --wts-text: #F3F4F6;
-    --wts-text-muted: #9CA3AF;
-    --wts-border: #374151;
-  }
+:host(.wts-dark) {
+  color-scheme: dark;
+  --wts-bg: #1F2937;
+  --wts-text: #F3F4F6;
+  --wts-text-muted: #9CA3AF;
+  --wts-border: #374151;
+  --wts-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --wts-danger-tint: rgba(239, 68, 68, 0.2);
+  --wts-danger-soft: #7F1D1D;
+  --wts-danger-soft-2: #7F1D1D;
+  --wts-danger-soft-2-hover: #991B1B;
+  --wts-danger-strong: #FECACA;
+  --wts-danger-border: #991B1B;
+  --wts-warning-soft: #78350F;
+  --wts-warning-strong: #FED7AA;
+  --wts-warning-bg: #7C2D12;
+  --wts-warning-bg-hover: #9A3412;
+  --wts-success-soft: #14532D;
+  --wts-success-border: #166534;
+  --wts-success-text: #BBF7D0;
+  --wts-hover: #374151;
+  --wts-row-active: #14532D;
+  --wts-row-help: #7F1D1D;
+  --wts-current-tag: #4ADE80;
+  --wts-header-gradient: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
+  --wts-backdrop: rgba(0, 0, 0, 0.6);
+  --wts-lock-backdrop: rgba(0, 0, 0, 0.7);
 }
 
 .wts-panel {
@@ -47,7 +93,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  background: var(--wts-header-gradient);
   color: white;
 }
 
@@ -98,25 +144,13 @@
   position: relative;
 }
 
-.wts-agent:hover { background: #F3F4F6; }
+.wts-agent:hover { background: var(--wts-hover); }
 
-@media (prefers-color-scheme: dark) {
-  .wts-agent:hover { background: #374151; }
-}
-
-.wts-agent.current-user { background: #F0FDF4; }
+.wts-agent.current-user { background: var(--wts-row-active); }
 
 .wts-agent.help-requested {
-  background: #FEF2F2;
-  border-left: 3px solid #EF4444;
-}
-
-@media (prefers-color-scheme: dark) {
-  .wts-agent.current-user { background: #14532D; }
-  .wts-agent.help-requested {
-    background: #7F1D1D;
-    border-left-color: #EF4444;
-  }
+  background: var(--wts-row-help);
+  border-left: 3px solid var(--wts-active);
 }
 
 .wts-delete-btn {
@@ -138,8 +172,8 @@
 }
 
 .wts-delete-btn:hover {
-  color: #EF4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--wts-active);
+  background: var(--wts-danger-tint);
 }
 
 .wts-agent-avatar {
@@ -178,7 +212,7 @@
 .wts-agent.current-user .wts-agent-name::after {
   content: ' (tú)';
   font-weight: 400;
-  color: #25D366;
+  color: var(--wts-current-tag);
   font-size: 12px;
 }
 
@@ -238,21 +272,21 @@
   border: 1px solid var(--wts-border);
   border-radius: 6px;
   background: transparent;
-  color: #EF4444;
+  color: var(--wts-active);
   font-size: 12px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s;
 }
-.wts-help-btn:hover { background: #FEF2F2; }
+.wts-help-btn:hover { background: var(--wts-danger-soft); }
 .wts-help-btn svg { width: 14px; height: 14px; }
 .wts-cancel-help-btn {
-  color: #991B1B;
-  border-color: #EF4444;
-  background: #FEE2E2;
+  color: var(--wts-danger-strong);
+  border-color: var(--wts-active);
+  background: var(--wts-danger-soft-2);
 }
-.wts-cancel-help-btn:hover { background: #FECACA; }
+.wts-cancel-help-btn:hover { background: var(--wts-danger-soft-2-hover); }
 .wts-pause-btn {
   flex: 1;
   display: inline-flex;
@@ -270,41 +304,30 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.wts-pause-btn:hover { background: #FEF3C7; }
+.wts-pause-btn:hover { background: var(--wts-warning-soft); }
 .wts-pause-btn svg { width: 14px; height: 14px; }
 .wts-resume-btn {
-  color: #9A3412;
+  color: var(--wts-warning-strong);
   border-color: var(--wts-primary);
-  background: #FED7AA;
+  background: var(--wts-warning-bg);
 }
-.wts-resume-btn:hover { background: #FDBA74; }
+.wts-resume-btn:hover { background: var(--wts-warning-bg-hover); }
 
 .wts-server-status {
   padding: 8px 16px;
-  background: #FEF2F2;
-  border-top: 1px solid #FECACA;
+  background: var(--wts-danger-soft);
+  border-top: 1px solid var(--wts-danger-border);
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  color: #991B1B;
+  color: var(--wts-danger-strong);
 }
 
 .wts-server-status.connected {
-  background: #F0FDF4;
-  border-top-color: #86EFAC;
-  color: #166534;
-}
-
-@media (prefers-color-scheme: dark) {
-  .wts-server-status {
-    background: #7F1D1D;
-    border-top-color: #991B1B;
-  }
-  .wts-server-status.connected {
-    background: #14532D;
-    border-top-color: #166534;
-  }
+  background: var(--wts-success-soft);
+  border-top-color: var(--wts-success-border);
+  color: var(--wts-success-text);
 }
 
 .wts-collapsed-badge {
@@ -312,7 +335,7 @@
   top: 0;
   right: 0;
   z-index: 2147483647;
-  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  background: var(--wts-header-gradient);
   color: white;
   padding: 10px 14px;
   border-radius: 50px;
@@ -331,7 +354,7 @@
 .wts-collapsed-badge:hover { opacity: 0.9; }
 
 .wts-collapsed-badge.help-active {
-  background: #DC2626;
+  background: var(--wts-danger);
   animation: wts-badge-pulse 1.5s ease-in-out infinite;
 }
 
@@ -374,7 +397,7 @@
 .wts-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--wts-backdrop);
 }
 
 .wts-modal-box {
@@ -424,12 +447,12 @@
 }
 
 .wts-modal-confirm {
-  background: #EF4444;
-  border-color: #EF4444;
+  background: var(--wts-active);
+  border-color: var(--wts-active);
   color: white;
 }
 
-.wts-modal-confirm:hover { background: #DC2626; }
+.wts-modal-confirm:hover { background: var(--wts-danger); }
 
 .wts-lock {
   position: fixed;
@@ -444,7 +467,7 @@
 .wts-lock-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--wts-lock-backdrop);
 }
 
 .wts-lock-box {
@@ -463,7 +486,7 @@
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #DC2626;
+  color: var(--wts-danger);
 }
 
 .wts-lock-message {
@@ -495,9 +518,9 @@
 }
 
 .wts-lock-primary {
-  background: #DC2626;
-  border-color: #DC2626;
+  background: var(--wts-danger);
+  border-color: var(--wts-danger);
   color: white;
 }
 
-.wts-lock-primary:hover { background: #B91C1C; }
+.wts-lock-primary:hover { background: var(--wts-danger-hover); }
