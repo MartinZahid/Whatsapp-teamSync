@@ -180,9 +180,11 @@
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--wts-text-muted);
+  color: #4B5563;
   margin-top: 2px;
 }
+
+:host(.wts-dark) .wts-agent-status { color: #F3F4F6; }
 
 .wts-status-dot {
   width: 7px;
