@@ -30,6 +30,7 @@ class WhatsAppTeamSync {
   private currentAgentName: string | null = null
   private titleBlinkTimer: number | null = null
   private titleBeforeBlink: string | null = null
+  private lockContact: string | null = null
 
   constructor() {
     this.domObserver = new DomObserver()
@@ -120,6 +121,14 @@ class WhatsAppTeamSync {
   private setCurrentContact(contact: string | null): void {
     if (contact === this.currentContact) return
     this.currentContact = contact
+    // Navigating away from the conflicted chat must release the lock overlay so
+    // it never gets stuck on screen / title. The server re-broadcasts the alert
+    // if we come back to a contact that still has an active conflict.
+    if (this.lockContact && this.lockContact !== contact) {
+      this.floatingPanel.clearDuplicateAlert()
+      this.stopTitleBlink()
+      this.lockContact = null
+    }
     this.typingDetector.setContact(contact)
     this.updateBackgroundContact(contact)
   }
@@ -172,6 +181,7 @@ class WhatsAppTeamSync {
         this.config = message.config
         break
       case 'DUPLICATE_ALERT':
+        this.lockContact = message.contact
         this.floatingPanel.showDuplicateAlert({
           contact: message.contact,
           ownerName: message.ownerName,
@@ -181,6 +191,7 @@ class WhatsAppTeamSync {
         this.startTitleBlink()
         break
       case 'DUPLICATE_CLEAR':
+        this.lockContact = null
         this.floatingPanel.clearDuplicateAlert()
         this.stopTitleBlink()
         break

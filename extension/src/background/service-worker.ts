@@ -669,6 +669,9 @@ class BackgroundManager {
     this.stopHeartbeat()
     chrome.action.setBadgeText({ text: '' })
 
+    // Release any duplicate lock overlay that may be stuck on the page.
+    this.broadcastToContent({ type: 'DUPLICATE_CLEAR', contact: '' })
+
     if (this.ws) {
       this.ws.close()
       this.ws = null

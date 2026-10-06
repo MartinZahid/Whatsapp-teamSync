@@ -171,6 +171,12 @@ export class RoomManager {
   private onLeftContact(agentId: string, contact: string | null): void {
     this.clearAgentTyping(agentId)
     if (!contact) return
+    // Always release the agent that leaves the contact: by the time the conflict
+    // resolves it is no longer "active" on the contact, so resolveDuplicate()
+    // would not notify it and its lock overlay would stay stuck.
+    if (this.duplicateContacts.has(contact)) {
+      this.sendTo(agentId, { type: 'DUPLICATE_CLEAR', contact })
+    }
     this.evaluateDuplicate(contact)
     // Drop the owner entry once nobody is active on the contact (avoids growth)
     if (!this.duplicateContacts.has(contact) && this.getActiveForContact(contact).length === 0) {
