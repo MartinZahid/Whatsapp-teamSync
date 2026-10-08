@@ -93,6 +93,7 @@ function allowedPath(targetPath: string): boolean {
   if (p.includes('..') || p.includes('\\')) return false
   if (p === '/agent' || p === '/event' || p === '/config/providers') return true
   if (p === '/question' || p === '/permission') return true
+  if (/^\/api\/session\/[^/]+\/question\/[^/]+\/(reply|reject)$/.test(p)) return true
   const SESSION_RE = /^\/session(\/status|\/[^/]+(\/(message|prompt_async|abort))?|\/[^/]+\/question(\/[^/]+\/(reply|reject))?|\/[^/]+\/permissions\/[^/]+)?$/
   return SESSION_RE.test(p)
 }
@@ -148,7 +149,7 @@ function ensurePersistent(): void {
       persistentRetry = 2000
       pres.on('data', () => {})
       pres.on('end', () => { persistent = null; if (!persistentStopped) setTimeout(ensurePersistent, 2000) })
-      pres.on('error', () => { persistent = null })
+      pres.on('error', () => { persistent = null; if (!persistentStopped) setTimeout(ensurePersistent, 2000) })
     }
   )
   preq.on('socket', (s) => { try { s.unref() } catch {} })
